@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { api } from './api';
+import { api, getSuggestions } from './api';
 import { demoMatch, examples } from './demo';
 afterEach(() => vi.unstubAllGlobals());
 describe('contract fixtures', () => {
@@ -19,6 +19,15 @@ describe('contract fixtures', () => {
  it('does not invent a match for unsupported demo inputs', () => expect(() => demoMatch({ ...examples[0].request, budget_kzt: 123 })).toThrow('фикстуры'));
 });
 describe('real API transport', () => {
+ it('requests verified recovery separately without changing the match contract', async () => {
+  const request = examples[2].request;
+  const recovery = { suggestions: [{ request: { ...request, budget_kzt: 500000 }, changed_fields: ['budget_kzt'], eligible_count: 2 }] };
+  const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(recovery)));
+  vi.stubGlobal('fetch', fetch);
+  expect(await getSuggestions(request, new AbortController().signal)).toEqual(recovery);
+  expect(fetch.mock.calls[0][0]).toBe('/api/suggestions');
+  expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual(request);
+ });
  it('sends numeric values and nullable optional fields to relative API', async () => {
   const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'no_matches' })));
   vi.stubGlobal('fetch', fetch);

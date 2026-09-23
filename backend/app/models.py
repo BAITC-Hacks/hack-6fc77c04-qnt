@@ -69,3 +69,13 @@ class MatchResponse(BaseModel):
     returned_count: int
     rejections: list[Rejection]
     cards: list[Card]
+
+
+class RecoverySuggestion(BaseModel):
+    request: MatchRequest
+    changed_fields: list[Literal["date", "budget_kzt"]] = Field(min_length=1, max_length=1)
+    eligible_count: int = Field(gt=0)
+
+
+class RecoveryResponse(BaseModel):
+    suggestions: list[RecoverySuggestion] = Field(max_length=2)

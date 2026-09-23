@@ -16,7 +16,8 @@ from .budget import CallBudget
 from .catalog import Catalog, DEFAULT_DATASET, load_catalog
 from .explanations import EvidenceSelector
 from .matching import match
-from .models import MatchRequest, MatchResponse
+from .models import MatchRequest, MatchResponse, RecoveryResponse
+from .recovery import recovery_suggestions
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -69,6 +70,13 @@ def create_app(dataset_path: Path = DEFAULT_DATASET, *, catalog: Catalog | None 
             return error_response("validation_error", str(exc), 422)
         await app.state.selector.enrich(result, request, selected)
         return result
+
+    @app.post("/api/suggestions", response_model=RecoveryResponse)
+    async def suggestions_endpoint(request: MatchRequest):
+        try:
+            return recovery_suggestions(request, app.state.catalog)
+        except ValueError as exc:
+            return error_response("validation_error", str(exc), 422)
 
     @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"], include_in_schema=False)
     async def unknown_api(path: str):

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { demo, getOptions, match } from './api';
+import { demo, getOptions, getSuggestions, match } from './api';
 import { examples } from './demo';
-import type { Options, Match, Request, Card } from './types';
+import type { Options, Match, Request, Card, RecoverySuggestion } from './types';
 import './style.css';
 import { useScreenTransition } from './useScreenTransition';
 import { ContractorCard, ResultSummary } from './ResultDetails';
@@ -12,6 +12,8 @@ import { ResultsFooter } from './ResultsFooter';
 import { addEstimateItem, replaceEstimateItem, removeEstimateItem, readEstimate, saveEstimate } from './estimate';
 import type { EstimateItem } from './estimate';
 import './mobile.css';
+import { BudgetInput } from './BudgetInput';
+import './recovery.css';
 function App() {
  const { screen, transition, cancelTransition } = useScreenTransition();
  const [options, setOptions] = useState<Options>();
@@ -20,6 +22,9 @@ function App() {
  const [form, setForm] = useState({ city: 'Алматы', date: '2026-10-10', event_format: 'корпоратив', category: 'Ведущий', budget_kzt: '1000000', language: 'русский', duration_hours: '4' });
  const [result, setResult] = useState<Match>();
  const [resultRequest, setResultRequest] = useState<Request>();
+ const [suggestions, setSuggestions] = useState<RecoverySuggestion[]>([]);
+ const [suggestionState, setSuggestionState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+ const [recoveryNotice, setRecoveryNotice] = useState('');
  const [estimate, setEstimate] = useState<EstimateItem[]>(() => demo ? [] : readEstimate());
  const [replacingId, setReplacingId] = useState<string>();
  const [estimateNotice, setEstimateNotice] = useState('');
@@ -42,6 +47,16 @@ function App() {
  }, [reload]);
  useEffect(() => () => active.current?.abort(), []);
  useEffect(() => {
+  setSuggestions([]); setSuggestionState('idle');
+  if (result?.status !== 'no_matches' || !resultRequest || demo) return;
+  const controller = new AbortController();
+  setSuggestionState('loading');
+  getSuggestions(resultRequest, controller.signal).then(data => {
+   if (!controller.signal.aborted) { setSuggestions(data.suggestions); setSuggestionState('ready'); }
+  }).catch(() => { if (!controller.signal.aborted) setSuggestionState('error'); });
+  return () => controller.abort();
+ }, [result, resultRequest]);
+ useEffect(() => {
   if (!compact || !resultHeader.current) return;
   const root = document.documentElement;
   const previous = root.style.scrollPaddingTop;
@@ -54,10 +69,11 @@ function App() {
   observer.observe(resultHeader.current);
   return () => { observer.disconnect(); root.style.scrollPaddingTop = previous; root.style.setProperty('--results-header-height', previousHeaderHeight); };
  }, [compact]);
- function revealForm(update = () => {}) {
+ function revealForm(update = () => {}, field?: 'date' | 'budget') {
   const focusForm = () => {
-   firstField.current?.focus({ preventScroll: true });
-   firstField.current?.scrollIntoView({ block: 'center', behavior: 'instant' });
+   const target = field ? document.getElementById(field) : firstField.current;
+   target?.focus({ preventScroll: true });
+   target?.scrollIntoView({ block: 'center', behavior: 'instant' });
   };
   if (!compact) { update(); window.requestAnimationFrame(focusForm); return; }
   void transition(() => { setCompact(false); update(); }, focusForm);
@@ -71,13 +87,22 @@ function App() {
  useEffect(() => { setStorageAvailable(demo || saveEstimate(estimate)); }, [estimate]);
  useEffect(() => { if (!estimateNotice || estimateOpen) return; const timer = window.setTimeout(() => setEstimateNotice(''), 6000); return () => window.clearTimeout(timer); }, [estimateNotice, estimateOpen]);
  function closeEstimate() { setEstimateOpen(false); setEstimateNotice(''); }
- function clear() { cancelTransition(); sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setResultRequest(undefined); setPendingSelection(undefined); setError(''); }
+ function clear() { cancelTransition(); sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setResultRequest(undefined); setPendingSelection(undefined); setSuggestions([]); setSuggestionState('idle'); setRecoveryNotice(''); setError(''); }
  function update(key: keyof typeof form, value: string) { clear(); if (['city', 'date', 'event_format', 'category'].includes(key)) { setReplacingId(undefined); setEstimateNotice(''); } setForm(f => ({ ...f, [key]: value })); }
  function applyExample(request: Request) {
   clear(); setReplacingId(undefined);
   setForm({ ...request, budget_kzt: String(request.budget_kzt), language: request.language ?? '', duration_hours: request.duration_hours === null ? '' : String(request.duration_hours) });
  }
  function example(request: Request) { revealForm(() => applyExample(request)); }
+ function useSuggestion(suggestion: RecoverySuggestion) {
+  const field = suggestion.changed_fields[0] === 'date' ? 'date' : 'budget';
+  revealForm(() => {
+   applyExample(suggestion.request);
+   if (field === 'budget') setReplacingId(replacingId);
+   const value = field === 'date' ? `Дата ${suggestion.request.date.split('-').reverse().join('.')}` : `Бюджет ${new Intl.NumberFormat('ru-RU').format(suggestion.request.budget_kzt)} ₸`;
+   setRecoveryNotice(`${value} подставлен${field === 'date' ? 'а' : ''}. По каталогу подходят: ${suggestion.eligible_count}. Остальные условия сохранены — нажмите «Подобрать подрядчиков».`);
+  }, field);
+ }
  function replaceFromEstimate(item: EstimateItem) {
   closeEstimate();
   revealForm(() => { applyExample(item.request); setReplacingId(item.contractor.id); });
@@ -160,17 +185,25 @@ function App() {
    <label htmlFor="date">Дата<input id="date" type="date" required min={options.date_min} max={options.date_max} value={form.date} onChange={e => update('date', e.target.value)}/></label>
    <label htmlFor="format">Формат<select id="format" required value={form.event_format} onChange={e => update('event_format', e.target.value)}>{options.event_formats.map(v => <option key={v}>{v}</option>)}</select></label>
    <label htmlFor="category">Категория<select id="category" required value={form.category} onChange={e => update('category', e.target.value)}>{options.categories.map(v => <option key={v}>{v}</option>)}</select></label>
-   <label className="wide" htmlFor="budget">Бюджет на одного подрядчика, ₸<input id="budget" type="number" inputMode="numeric" required min="1" step="1" value={form.budget_kzt} onChange={e => update('budget_kzt', e.target.value)}/><small>За мероприятие. Цена в карточке указана «от».</small></label>
+   <label className="wide" htmlFor="budget">Бюджет на одного подрядчика, ₸<BudgetInput value={form.budget_kzt} onChange={value => update('budget_kzt', value)}/><small>За мероприятие. Цена в карточке указана «от».</small></label>
    <label htmlFor="language">Язык <small>необязательно</small><select id="language" value={form.language} onChange={e => update('language', e.target.value)}><option value="">Без ограничения</option>{options.languages.map(v => <option key={v}>{v}</option>)}</select></label>
    <label htmlFor="hours">Часы <small>необязательно</small><input id="hours" type="number" min="0.01" step="any" placeholder="Без ограничения" value={form.duration_hours} onChange={e => update('duration_hours', e.target.value)}/></label>
-  </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button><div className="search-feedback" role="status" aria-atomic="true">{loading ? 'Проверяем условия. Ожидание — до 12 секунд…' : error ? 'Не удалось выполнить подбор.' : result ? (result.returned_count ? `Подбор готов: ${result.returned_count} ${result.returned_count === 1 ? 'вариант' : 'варианта'}.` : 'Подбор завершён: совпадений нет.') : ''}</div>{(result || error) && <button className="outcome-link" type="button" onClick={showResults}>{error ? 'Перейти к ошибке' : 'Посмотреть результат'} ↓</button>}</form>}
+  </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p>{recoveryNotice && <p className="recovery-notice" role="status">{recoveryNotice}</p>}<button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button><div className="search-feedback" role="status" aria-atomic="true">{loading ? 'Проверяем условия. Ожидание — до 12 секунд…' : error ? 'Не удалось выполнить подбор.' : result ? (result.returned_count ? `Подбор готов: ${result.returned_count} ${result.returned_count === 1 ? 'вариант' : 'варианта'}.` : 'Подбор завершён: совпадений нет.') : ''}</div>{(result || error) && <button className="outcome-link" type="button" onClick={showResults}>{error ? 'Перейти к ошибке' : 'Посмотреть результат'} ↓</button>}</form>}
   <div className="examples"><p>Попробуйте готовый пример</p><div>{examples.map(e => <button key={e.title} disabled={!options} onClick={() => example(e.request)}>{e.title}</button>)}</div><small>Пример заполняет форму. Нажмите кнопку подбора.</small></div></section></div></div>
   <div className="content"><section hidden={!compact && !loading && !error} className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step" aria-hidden="true">✳</span><h2 id="results-title" ref={outcome} tabIndex={-1}>Ваш подбор<span className="title-dot">.</span></h2>{compact && result && <span className="result-total">Показано: {result.returned_count}</span>}</div>
   <div>{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <ResultSummary result={result} date={form.date}/>}</div>
   {error && <div className="error" role="alert">{error}<p>Параметры сохранены. Повторите подбор.</p></div>}
   {!result && !loading && !error && <div className="empty"><p className="eyebrow">ЛЮДИ / ИДЕИ / СОБЫТИЯ</p><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
-  {Boolean(result?.cards.length) && <p className="explanation-note">Соответствие условиям проверяет программный код. AI может выбрать цитату для объяснения; local — объяснение без AI.</p>}
   {result?.cards.map((card, index) => <ContractorCard key={card.id} card={card} index={index} selected={estimate.some(item => item.contractor.id === card.id && item.request.city === resultRequest?.city && item.request.date === resultRequest?.date && item.request.event_format === resultRequest?.event_format)} selectingReplacement={Boolean(replacingId)} onSelect={() => choose(card)}/>)}
+  {result?.status === 'no_matches' && !demo && <section className="recovery-options" aria-label="Проверенные изменения условий" aria-busy={suggestionState === 'loading'}>
+   {suggestionState === 'loading' && <p role="status">Проверяем, какое изменение даст варианты…</p>}
+   {suggestions.length > 0 && <><h3>Одно изменение — и есть варианты</h3><p>Проверено по каталогу. Подставим новое значение и откроем нужное поле; остальные условия сохранятся.</p><div className="recovery-buttons">{suggestions.map(suggestion => {
+    const date = suggestion.changed_fields[0] === 'date';
+    return <button key={suggestion.changed_fields.join(',')} type="button" onClick={() => useSuggestion(suggestion)}><strong>{date ? `Изменить дату на ${suggestion.request.date.split('-').reverse().join('.')}` : `Изменить бюджет на ${new Intl.NumberFormat('ru-RU').format(suggestion.request.budget_kzt)} ₸`}</strong><span>Подходят по условиям: {suggestion.eligible_count} ↗</span></button>;
+   })}</div></>}
+   {suggestionState === 'ready' && !suggestions.length && <p>В каталоге нет вариантов при изменении только даты или только бюджета. Проверьте остальные условия вручную.</p>}
+   {suggestionState === 'error' && <p>Не удалось проверить альтернативы. Условия можно изменить вручную.</p>}
+  </section>}
   {result?.returned_count === 0 && <button onClick={editConditions}>Изменить условия ↑</button>}
   {result && <ResultsFooter result={result}/>}
   </section>

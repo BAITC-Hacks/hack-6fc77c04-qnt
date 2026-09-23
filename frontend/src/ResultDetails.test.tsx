@@ -7,12 +7,37 @@ describe('Readable evidence presentation', () => {
  it('puts honest AI attribution before the quote, renders it once and translates fields', () => {
   const html = renderToStaticMarkup(<ContractorCard card={card}/>);
   expect(html.indexOf('AI выбрал факт')).toBeLessThan(html.indexOf('Деловые встречи'));
+  expect(html.indexOf('Формат указан в каталоге.')).toBeLessThan(html.indexOf('Из описания подрядчика'));
+  expect(html.indexOf('Из описания подрядчика')).toBeLessThan(html.indexOf('Деловые встречи'));
   expect(html.match(/Деловые встречи/g)).toHaveLength(1);
   expect(html.match(/русский/g)).toHaveLength(1);
   expect(html).not.toContain('price_from_kzt');
   expect(html).not.toContain('max_hours');
   expect(html).toContain('6 ч');
   expect(html).toContain('10.10.2026 — нет отметки о занятости');
+ });
+ it('opens the checked evidence and keeps the main conclusion separate from its proof', () => {
+  const html = renderToStaticMarkup(<ContractorCard card={card}/>);
+  expect(html).toContain('class="verified-facts" open=""');
+  expect(html).toContain('class="reason-text">Формат указан в каталоге.</p>');
+  expect(html).toContain('class="source-proof"');
+  expect(html).toContain('от 500 000 ₸');
+ });
+ it('marks only the first deterministic result, without claiming AI chose the winner', () => {
+  const first = renderToStaticMarkup(<ContractorCard card={card} index={0}/>);
+  const second = renderToStaticMarkup(<ContractorCard card={card} index={1}/>);
+  expect(first).toContain('Первый в подборе');
+  expect(second).not.toContain('Первый в подборе');
+  expect(first).not.toContain('Лучший');
+  expect(first).not.toContain('AI рекомендует');
+ });
+ it('preserves selected and replacement actions with the expanded evidence', () => {
+  const selected = renderToStaticMarkup(<ContractorCard card={card} selected onSelect={() => {}}/>);
+  const replacement = renderToStaticMarkup(<ContractorCard card={card} selectingReplacement onSelect={() => {}}/>);
+  expect(selected).toContain('disabled=""');
+  expect(selected).toContain('Имя уже в смете');
+  expect(replacement).toContain('Заменить на Имя');
+  expect(replacement).not.toContain('disabled=""');
  });
  it('never labels fallback as AI selection and escapes catalog text', () => {
   const html = renderToStaticMarkup(<ContractorCard card={{ ...card, explanation_mode: 'local', explanation: '<script>alert(1)</script>' }}/>);
