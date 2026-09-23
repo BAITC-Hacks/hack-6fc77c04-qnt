@@ -17,6 +17,26 @@ FORMAT_PATTERNS = {
     "конференция": r"\bконференц", "юбилей": r"\bюбиле",
     "день рождения": r"\b(?:день|дня) рождения\b", "той": r"\bтой\b",
 }
+# Evidence quality only: these signals never filter or rank contractors.
+DETAIL_PATTERN = re.compile(
+    r"\b(?:опыт|лет\b|специализ|авторск|репертуар|оборудов|свет|звук|сценар|импровиз|"
+    r"интерактив|юмор|развлечен|танц|актер|цветоч|флорист|классическ|современн|традици|"
+    r"делов|музык|театр|вместим|панорам|кухн|террас|юрт|песн|состав|вокал|квартет|"
+    r"струн|духов|перкус|клавиш|барабан|гитар|скрип|саксофон|контрабас|джаз|"
+    r"документал|фотожурнал|репортаж|концерт|жанр|портрет|печат|рамк|брендир|"
+    r"сценограф|неон|арки|фотозон|президиум|кейтеринг|парковк|резидент|финалист|"
+    r"живые кадры|настоящие улыбки|живые эмоции|не про позы)"
+)
+OPERATIONAL_PATTERN = re.compile(
+    r"язык|двуязыч|билингв|\bна\s+(?:русск|казахск|английск)\w*|"
+    r"стоимост|\bцен(?:а|ы|у|е|ой)\b|бюджет|тенге|₸|\bkzt\b|"
+    r"\bчас(?:а|ов|ы)?\b|\b\d+\s*ч\b", re.I
+)
+
+
+def detail_score(text: str) -> int:
+    normalized = text.casefold().replace("ё", "е")
+    return len(set(DETAIL_PATTERN.findall(normalized)))
 
 
 def format_mentioned(text: str, event_format: str) -> bool:
@@ -42,19 +62,21 @@ def snippets(c: Contractor) -> list[str]:
     # Exclude potentially conflicting operational claims from free-text evidence.
     # Structured columns are authoritative for price, language and duration.
     sentences = re.split(r"(?<=[.!?])\s+|[\r\n•]+", c.description)
-    operational = re.compile(r"язык|русск|казахск|английск|стоимост|\bцен[аыу]|тенге|₸|\bчас(?:а|ов|ы)?\b", re.I)
-    return [s.strip() for s in sentences if 15 <= len(s.strip()) <= 500 and not operational.search(s)][:16]
+    safe = [s.strip() for s in sentences if 15 <= len(s.strip()) <= 500 and not OPERATIONAL_PATTERN.search(s)]
+    # A cuisine/music adjective is not a working-language claim. If substantive
+    # evidence exists, do not offer greetings/category-only lines to either AI
+    # or local selection. Every returned string stays an exact source substring.
+    detailed = [s for s in safe if detail_score(s) > 0]
+    return (detailed or safe)[:16]
 
 
 def local_snippet(c: Contractor, r: MatchRequest) -> str | None:
     candidates = snippets(c)
     if not candidates:
         return None
-    concrete = re.compile(r"\b(?:опыт|лет\b|специализ|авторск|репертуар|оборудов|свет|звук|сценар|импровиз|интерактив|юмор|развлечен|танц|актер|цветоч|флорист|классическ|современн|традици|делов|музык|театр|вместим)")
     def relevance(sentence: str):
-        normalized = sentence.casefold().replace("ё", "е")
-        return (int(format_mentioned(sentence, r.event_format)),
-                len(set(concrete.findall(normalized))),
+        return (detail_score(sentence),
+                int(format_mentioned(sentence, r.event_format)),
                 int(bool(re.search(r"\d", sentence))))
     # max preserves source order for equal keys; greetings have no concrete signals.
     return max(candidates, key=relevance)
