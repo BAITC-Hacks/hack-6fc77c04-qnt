@@ -1,0 +1,2 @@
+# Preserve the organizer's original bytes and SHA-256 on every platform.
+data/contractors.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
