@@ -9,6 +9,7 @@ from collections import OrderedDict, deque
 
 import httpx
 
+from .budget import CallBudget
 from .catalog import Contractor
 from .matching import explanation, snippets
 from .models import Evidence, MatchRequest, MatchResponse
@@ -18,12 +19,14 @@ logger = logging.getLogger(__name__)
 
 class EvidenceSelector:
     def __init__(self, client: httpx.AsyncClient, *, api_key: str = "", enabled: bool = False,
-                 model: str = "gpt-4.1-mini", timeout: float = 6.0):
+                 model: str = "gpt-4.1-mini", timeout: float = 6.0,
+                 budget: CallBudget | None = None):
         self.client = client
         self.api_key = api_key
         self.enabled = enabled
         self.model = model
         self.timeout = timeout
+        self.budget = budget
         self.cache: OrderedDict[str, dict[str, str]] = OrderedDict()
         self.semaphore = asyncio.Semaphore(2)
         self.cooldown_until = 0.0
@@ -45,6 +48,8 @@ class EvidenceSelector:
             if now < self.cooldown_until or self.semaphore.locked() or len(self.calls) >= 12:
                 return
             async with self.semaphore:
+                if self.budget is not None and not self.budget.reserve():
+                    return
                 self.calls.append(now)
                 try:
                     choices = await asyncio.wait_for(self._choose(request, sources), timeout=self.timeout)
