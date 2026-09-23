@@ -13,7 +13,13 @@ mkdirSync(screenshots, { recursive: true });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  const submit = () => page.locator('button[type=submit]').click();
+  async function openForm() {
+   if (await page.locator('.edit-conditions').count()) {
+    await page.locator('.edit-conditions').click();
+    await page.waitForFunction(() => document.activeElement.id === 'city');
+   }
+  }
+  async function submit() { await openForm(); await page.locator('button[type=submit]').click(); }
   async function search() {
    const response = page.waitForResponse(r => r.url().endsWith('/api/match'));
    await submit();
@@ -30,12 +36,16 @@ mkdirSync(screenshots, { recursive: true });
    await page.setViewportSize({ width, height: 900 });
    await page.goto(base);
    await page.locator('#city option').first().waitFor({ state: 'attached' });
+   if (width === 1440) await page.screenshot({ path: join(screenshots, 'before-search-1440.png'), fullPage: true });
    assert.equal(await page.locator('.demo').count(), 0);
    const data = await search();
    assert.equal(data.returned_count, 3);
    assert(data.cards.every(c => c.explanation_mode === 'local'));
-   await page.locator('.outcome-link').focus();
-   await page.keyboard.press('Enter');
+   await page.waitForFunction(() => document.activeElement.id === 'results-title');
+   assert.equal(await page.locator('.hero-content').isVisible(), false);
+   assert((await page.locator('.conditions').textContent()).includes('1 000 000'));
+   assert((await page.locator('#results-title').boundingBox()).y < 600);
+   assert.equal(await page.evaluate(() => scrollY), 0);
    assert.equal(await page.evaluate(() => document.activeElement.id), 'results-title');
    const facts = page.locator('.card summary').first();
    await facts.focus(); await page.keyboard.press('Enter');
@@ -53,18 +63,25 @@ mkdirSync(screenshots, { recursive: true });
     await page.evaluate(() => { document.activeElement.blur(); window.scrollTo(0, 0); });
     await page.screenshot({ path: join(screenshots, `editorial-${width}.png`), fullPage: true });
    }
+   await openForm();
+   assert.equal(await page.locator('#budget').inputValue(), '1000000');
    await page.locator('#budget').fill('1000');
    const empty = await search();
    assert.equal(empty.status, 'no_matches'); await fits();
+   assert.equal(await page.locator('.hero-content').isVisible(), false);
    console.log(`PASS ${width}px: real matches, evidence, keyboard, empty, no overflow`);
   }
+  await openForm();
   await page.getByRole('button', { name: 'Нет категории', exact: true }).click();
   assert.equal((await search()).status, 'category_missing');
+  await openForm();
   await page.getByRole('button', { name: 'Редкие флористы', exact: true }).click();
   const short = await search(); assert(short.returned_count > 0 && short.returned_count < 3);
+  await openForm();
   await page.getByRole('button', { name: 'Ведущие осенью', exact: true }).click();
   await page.route('**/api/match', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: { message: 'Проверка ошибки API' } }) }));
   await submit(); await page.getByRole('alert').waitFor();
+  assert.equal(await page.locator('.hero-content').isVisible(), true);
   assert.equal(await page.locator('.card').count(), 0);
   assert.equal(await page.locator('#budget').inputValue(), '1000000');
   await page.unroute('**/api/match');
@@ -92,5 +109,25 @@ mkdirSync(screenshots, { recursive: true });
   for (const flag of ['AI выбрал факт', 'Синтетический профиль', 'Город дополнен в каталоге', 'Цена дополнена в каталоге']) assert((await page.locator('.card').first().textContent()).includes(flag));
   assert.deepEqual(errors, []);
   console.log('PASS injected two cards, AI/flags, long text at 320px; no JS errors');
+  assert.equal(await page.title(), 'QNT — умный подбор подрядчиков');
+  assert.equal(await page.locator('html').getAttribute('lang'), 'ru');
+  for (const property of ['title', 'description', 'type', 'site_name', 'image']) {
+   assert(await page.locator(`meta[property="og:${property}"]`).getAttribute('content'));
+  }
+  for (const name of ['card', 'title', 'description', 'image']) {
+   assert(await page.locator(`meta[name="twitter:${name}"]`).getAttribute('content'));
+  }
+  assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'), 'https://qnt.l33t.kz/og-image.png');
+  for (const asset of ['/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/og-image.png']) {
+   const response = await page.request.get(base + asset);
+   assert(response.ok(), asset);
+   assert(!(response.headers()['content-type'] || '').includes('text/html'), asset);
+  }
+  const dimensions = await page.evaluate(async () => {
+   const img = new Image(); img.src = '/og-image.png'; await img.decode();
+   return [img.naturalWidth, img.naturalHeight];
+  });
+  assert.deepEqual(dimensions, [1200, 630]);
+  console.log('PASS production metadata, local icon links and 1200x630 OG image (not public chat previews)');
  } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

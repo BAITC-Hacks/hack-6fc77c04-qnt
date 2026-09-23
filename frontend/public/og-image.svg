@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#211b15"/>
+  <circle cx="1110" cy="310" r="300" fill="#30251c"/>
+  <circle cx="1110" cy="310" r="225" fill="none" stroke="#6e5741"/>
+  <g stroke="#e5c9aa" stroke-width="3" transform="translate(85 78)">
+    <path d="M0-23V23M-23 0H23M-16-16 16 16M16-16-16 16"/>
+  </g>
+  <text x="126" y="93" fill="#fff7ee" font-family="Georgia,serif" font-size="46">QNT</text>
+  <text x="270" y="86" fill="#d9c3ab" font-family="Arial,sans-serif" font-size="17" letter-spacing="3">FIREBIRD</text>
+  <path d="M62 135H1138" stroke="#6e5741"/>
+  <text x="62" y="256" fill="#fff7ee" font-family="Georgia,serif" font-size="78">Нужные люди.</text>
+  <text x="62" y="350" fill="#e5c9aa" font-family="Georgia,serif" font-size="78">Под ваше событие.</text>
+  <text x="65" y="431" fill="#e4dace" font-family="Arial,sans-serif" font-size="25">Умный подбор подрядчиков</text>
+  <text x="65" y="470" fill="#bfae9b" font-family="Arial,sans-serif" font-size="21">Ваши условия · До трёх вариантов · Понятные основания</text>
+  <text x="65" y="563" fill="#e5c9aa" font-family="Arial,sans-serif" font-size="20">qnt.l33t.kz</text>
+</svg>

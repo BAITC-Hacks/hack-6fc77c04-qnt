@@ -14,6 +14,7 @@ function App() {
  const [result, setResult] = useState<Match>();
  const [error, setError] = useState('');
  const [loading, setLoading] = useState(false);
+ const [compact, setCompact] = useState(false);
  const active = useRef<AbortController | null>(null);
  const sequence = useRef(0);
  const outcome = useRef<HTMLHeadingElement>(null);
@@ -25,6 +26,16 @@ function App() {
   return () => controller.abort();
  }, [reload]);
  useEffect(() => () => active.current?.abort(), []);
+ useEffect(() => {
+  if (compact) {
+   outcome.current?.focus({ preventScroll: true });
+   window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+ }, [compact]);
+ function editConditions() {
+  setCompact(false);
+  requestAnimationFrame(() => firstField.current?.focus());
+ }
  function clear() { sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setError(''); }
  function update(key: keyof typeof form, value: string) { clear(); setForm(f => ({ ...f, [key]: value })); }
  function example(request: Request) { clear(); setForm({ ...request, budget_kzt: String(request.budget_kzt), language: request.language ?? '', duration_hours: request.duration_hours === null ? '' : String(request.duration_hours) }); firstField.current?.focus(); }
@@ -34,15 +45,24 @@ function App() {
   const budget = Number(form.budget_kzt), hours = form.duration_hours === '' ? null : Number(form.duration_hours);
   if (!Number.isSafeInteger(budget) || budget <= 0 || (hours !== null && (!Number.isFinite(hours) || hours <= 0)) || form.date < options.date_min || form.date > options.date_max || !options.cities.includes(form.city) || !options.categories.includes(form.category) || !options.event_formats.includes(form.event_format) || (form.language && !options.languages.includes(form.language))) { setError('Проверьте значения: бюджет — положительное целое число, часы — больше нуля, дата — в пределах календаря.'); return; }
   const controller = new AbortController(); active.current = controller; const version = ++sequence.current; setLoading(true);
-  try { const data = await match({ ...form, budget_kzt: budget, language: form.language || null, duration_hours: hours }, controller.signal); if (sequence.current === version) setResult(data); }
+  try { const data = await match({ ...form, budget_kzt: budget, language: form.language || null, duration_hours: hours }, controller.signal); if (sequence.current === version) { setResult(data); setCompact(true); } }
   catch (e) { if (sequence.current === version && !controller.signal.aborted) setError(e instanceof Error ? e.message : 'Не удалось выполнить запрос.'); }
   finally { if (sequence.current === version) setLoading(false); }
  }
  return <>
   {demo && <div className="demo" role="note">Демонстрационные ответы интерфейса <span>· Вымышленные примеры, без сервера и AI</span></div>}
-  <main><div className="hero"><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a><span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span></header>
-  <div className="hero-content"><div className="intro"><div className="intro-copy"><p className="eyebrow">ВАШЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Нужные люди.<br/><span>Под ваше событие.</span></h1><p>Задайте условия — получите до трёх подрядчиков<br className="desktop"/> с понятным объяснением каждого выбора.</p></div><div className="benefits"><div><span aria-hidden="true">♧</span>Проверяем<br/>по вашим условиям</div><div><span aria-hidden="true">≡</span>Объясняем<br/>каждый выбор</div><div><span aria-hidden="true">◇</span>До трёх<br/>вариантов</div></div></div>
-  <section className="panel" aria-labelledby="form-title"><div className="section-title"><h2 id="form-title">Ваше событие</h2></div>
+  <main className={compact ? 'has-results' : undefined}><div className="hero"><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a><span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span></header>
+  {compact && <section className="conditions" aria-labelledby="conditions-title">
+   <div className="conditions-heading"><h1 id="conditions-title">Ваше событие</h1><button className="edit-conditions" onClick={editConditions} aria-controls="event-form" aria-expanded={false}>Изменить условия <span aria-hidden="true">↗</span></button></div>
+   <dl className="conditions-list">
+    <div><dt>Город</dt><dd>{form.city}</dd></div><div><dt>Дата</dt><dd>{form.date.split('-').reverse().join('.')}</dd></div>
+    <div><dt>Формат</dt><dd>{form.event_format}</dd></div><div><dt>Категория</dt><dd>{form.category}</dd></div>
+    <div><dt>Бюджет на одного</dt><dd>до {new Intl.NumberFormat('ru-RU').format(Number(form.budget_kzt))} ₸</dd></div>
+    <div><dt>Язык</dt><dd>{form.language || 'Без ограничения'}</dd></div><div><dt>Длительность</dt><dd>{form.duration_hours ? `${form.duration_hours} ч` : 'Без ограничения'}</dd></div>
+   </dl>
+  </section>}
+  <div className="hero-content" hidden={compact}><div className="intro"><div className="intro-copy"><p className="eyebrow">ВАШЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Нужные люди.<br/><span>Под ваше событие.</span></h1><p>Задайте условия — получите до трёх подрядчиков<br className="desktop"/> с понятным объяснением каждого выбора.</p></div><div className="benefits"><div><span aria-hidden="true">♧</span>Проверяем<br/>по вашим условиям</div><div><span aria-hidden="true">≡</span>Объясняем<br/>каждый выбор</div><div><span aria-hidden="true">◇</span>До трёх<br/>вариантов</div></div></div>
+  <section id="event-form" className="panel" aria-labelledby="form-title"><div className="section-title"><h2 id="form-title">Ваше событие</h2></div>
   {!options && !optionsError && <p role="status">Загружаем справочники…</p>}
   {optionsError && <div role="alert" className="error"><p>{optionsError}</p><button onClick={() => setReload(r => r + 1)}>Повторить загрузку</button></div>}
   {options && <form onSubmit={submit}><div className="fields">
@@ -61,7 +81,7 @@ function App() {
   {!result && !loading && !error && <div className="empty"><p className="eyebrow">ЛЮДИ / ИДЕИ / СОБЫТИЯ</p><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
   {Boolean(result?.cards.length) && <p className="explanation-note">Соответствие условиям проверяет программный код. AI может выбрать цитату для объяснения; local — объяснение без AI.</p>}
   {result?.cards.map((card, index) => <ContractorCard key={card.id} card={card} index={index}/>)}
-  {result && <><details className="filters"><summary>Как условия повлияли на подбор</summary><p>В городе и категории: {result.total_in_category}. Последовательные фильтры: каждый исключённый кандидат учитывается только по первой причине.</p><ul>{result.rejections.map(r => <li key={r.code}>{reasons[r.code]} <strong>{r.count}</strong></li>)}</ul></details>{result.returned_count === 0 && <button onClick={() => firstField.current?.focus()}>Изменить условия ↑</button>}</>}
+  {result && <><details className="filters"><summary>Как условия повлияли на подбор</summary><p>В городе и категории: {result.total_in_category}. Последовательные фильтры: каждый исключённый кандидат учитывается только по первой причине.</p><ul>{result.rejections.map(r => <li key={r.code}>{reasons[r.code]} <strong>{r.count}</strong></li>)}</ul></details>{result.returned_count === 0 && <button onClick={editConditions}>Изменить условия ↑</button>}</>}
   </section><footer>Источник: учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны только отдельные вымышленные фикстуры.'} Подбор не является бронированием.</footer></div></main>
  </>;
 }
