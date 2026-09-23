@@ -1,0 +1,199 @@
+{
+  "rubric": "Internal predeclared source-selection rubric, not organizer points: 0=generic/off-topic; 1=weak/indirect; 2=concrete, useful for comparing this event category. Sparse source HK-30583 cannot earn 2. Unmatched quote earns 0. Exact source and stable selection are separate gates.",
+  "cases": [
+    {
+      "name": "corporate_hosts",
+      "request": {
+        "city": "Алматы",
+        "date": "2026-10-10",
+        "event_format": "корпоратив",
+        "category": "Ведущий",
+        "budget_kzt": 1000000,
+        "language": null,
+        "duration_hours": null
+      },
+      "grades": {
+        "HK-88430": [
+          {
+            "contains": "корпоративных мероприятий",
+            "points": 2
+          },
+          {
+            "contains": "интеллигентного юмора",
+            "points": 1
+          }
+        ],
+        "HK-29829": [
+          {
+            "contains": "развлечения и танцы",
+            "points": 2
+          }
+        ],
+        "HK-27222": [
+          {
+            "contains": "европейская подача",
+            "points": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "wedding_photographers",
+      "request": {
+        "city": "Алматы",
+        "date": "2026-10-10",
+        "event_format": "свадьба",
+        "category": "Фотограф",
+        "budget_kzt": 10000000,
+        "language": null,
+        "duration_hours": null
+      },
+      "grades": {
+        "HK-30583": [
+          {
+            "contains": "Эстетика, атмосфера, детали",
+            "points": 1
+          }
+        ],
+        "HK-16628": [
+          {
+            "contains": "свадебным и репортажным",
+            "points": 2
+          }
+        ],
+        "HK-53108": [
+          {
+            "contains": "около семи лет",
+            "points": 2
+          },
+          {
+            "contains": "свет и тишина",
+            "points": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "rare_florist",
+      "request": {
+        "city": "Алматы",
+        "date": "2026-10-10",
+        "event_format": "свадьба",
+        "category": "Флорист",
+        "budget_kzt": 300000,
+        "language": null,
+        "duration_hours": null
+      },
+      "grades": {
+        "HK-39372": [
+          {
+            "contains": "авторском цветочном оформлении",
+            "points": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "live_band",
+      "request": {
+        "city": "Алматы",
+        "date": "2026-10-10",
+        "event_format": "свадьба",
+        "category": "Лайв-бэнд",
+        "budget_kzt": 10000000,
+        "language": null,
+        "duration_hours": null
+      },
+      "grades": {
+        "HK-23752": [
+          {
+            "contains": "большой выбор казахских песен",
+            "points": 2
+          },
+          {
+            "contains": "Расширенный состав",
+            "points": 2
+          },
+          {
+            "contains": "плотный живой звук",
+            "points": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "restaurants",
+      "request": {
+        "city": "Алматы",
+        "date": "2026-10-10",
+        "event_format": "свадьба",
+        "category": "Ресторан",
+        "budget_kzt": 10000000,
+        "language": null,
+        "duration_hours": null
+      },
+      "grades": {
+        "HK-50695": [
+          {
+            "contains": "итальянской и средиземноморской кухни",
+            "points": 2
+          },
+          {
+            "contains": "уютные террасы, живую музыку",
+            "points": 2
+          }
+        ],
+        "HK-64395": [
+          {
+            "contains": "панорамная локация",
+            "points": 2
+          },
+          {
+            "contains": "уютные террасы",
+            "points": 2
+          }
+        ],
+        "HK-58236": [
+          {
+            "contains": "национальной казахской кухни",
+            "points": 2
+          },
+          {
+            "contains": "традиционной юртой",
+            "points": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "available_venues",
+      "request": {
+        "city": "Алматы",
+        "date": "2026-11-14",
+        "event_format": "свадьба",
+        "category": "Банкетный зал",
+        "budget_kzt": 10000000,
+        "language": null,
+        "duration_hours": null
+      },
+      "grades": {
+        "HK-64395": [
+          {
+            "contains": "панорамная локация",
+            "points": 2
+          },
+          {
+            "contains": "уютные террасы",
+            "points": 2
+          }
+        ],
+        "HK-90011": [
+          {
+            "contains": "до 200 гостей",
+            "points": 2
+          }
+        ]
+      }
+    }
+  ]
+}

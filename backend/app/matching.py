@@ -4,6 +4,7 @@ import re
 from collections import Counter
 
 from .catalog import Catalog, Contractor
+from .explanation_text import explanation_text
 from .models import Card, Evidence, Flags, MatchRequest, MatchResponse, Rejection
 
 REASONS = ("busy", "format", "budget", "language", "duration")
@@ -62,7 +63,12 @@ def snippets(c: Contractor) -> list[str]:
     # Exclude potentially conflicting operational claims from free-text evidence.
     # Structured columns are authoritative for price, language and duration.
     sentences = re.split(r"(?<=[.!?])\s+|[\r\n•]+", c.description)
-    safe = [s.strip() for s in sentences if 15 <= len(s.strip()) <= 500 and not OPERATIONAL_PATTERN.search(s)]
+    # Catalog lists sometimes omit punctuation between independent clauses.
+    # Split only at explicit clause headings; each part is an exact substring.
+    boundaries = r"\s+(?=(?:Расширенный состав|Большой состав|Репертуар|Статистика:|К каждой свадьбе|Вел свадьбы|Резидент |Ведущий проекта|Организатор и ведущий|Участник международной|Сценарист |Отец ))"
+    fragments = [part for s in sentences for part in (re.split(boundaries, s) if len(s) > 240 else [s])]
+    safe = [s.strip() for s in fragments if 15 <= len(s.strip()) <= 500
+            and not OPERATIONAL_PATTERN.search(s) and not re.search(r"\b0\s+развод", s, re.I)]
     # A cuisine/music adjective is not a working-language claim. If substantive
     # evidence exists, do not offer greetings/category-only lines to either AI
     # or local selection. Every returned string stays an exact source substring.
@@ -96,12 +102,7 @@ def local_snippet(c: Contractor, r: MatchRequest) -> str | None:
 
 
 def explanation(c: Contractor, r: MatchRequest, quote: str | None) -> str:
-    # Price, calendar, language and hours remain in structured evidence. Avoid
-    # repeating the form/name in prose; never turn a base price into a final quote.
-    result = f"Формат «{r.event_format}» указан в каталоге; начальная цена в пределах бюджета."
-    if quote:
-        result += " В описании: «" + quote.rstrip(".!? ") + "»."
-    return result
+    return explanation_text(r, quote)
 
 
 def make_card(c: Contractor, r: MatchRequest) -> Card:

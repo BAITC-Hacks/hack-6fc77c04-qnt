@@ -25,7 +25,7 @@ export function ResultSummary({ result, date }: { result: Match; date: string })
   </dl>
   {result.status === 'category_missing' ? <p>Выберите другой город или категорию — в этом разделе каталога пока нет профилей.</p> : <>
    {result.eligible_count < 3 && <p>{result.eligible_count > 0 ? 'Показаны все подходящие варианты.' : 'Ни один профиль не прошёл все условия.'} {result.rejections.some(r => r.count > 0) ? 'Причины отсева — под результатами; можно изменить условия и повторить подбор.' : 'В каталоге мало профилей этой категории.'}</p>}
-   <p className="calendar-note">Дата: {displayDate} · проверена по учебному календарю.<br/>Доступность и бронь нужно подтвердить у подрядчика.</p>
+   <p className="calendar-note">Исключено по занятости: {result.rejections.find(r => r.code === 'busy')?.count ?? 0}. Смена даты может изменить подбор.<br/>Дата: {displayDate} · проверена по учебному календарю.<br/>Доступность и бронь нужно подтвердить у подрядчика.</p>
   </>}
  </div>;
 }

@@ -1,0 +1,660 @@
+{
+  "created_at_utc": "2026-09-23T11:02:21.953762+00:00",
+  "live": true,
+  "source_sha256": "6a724b6b7dfb5973343e68ba18dadb60fc807d87e3d78f03ee86fb26cb089f7d",
+  "rubric_sha256": "1524a64f45c6e28748fd8d1cd8a27c2acac94c76226cfe15848f54a7bc58854a",
+  "implementation_sha256": {
+    "matching.py": "5d31e6992b7594bee391470f9ec26c687b338260778e3c71d41df3fdbca43ce4",
+    "explanations.py": "6a2150555fe5215fe7cbb48d6dfbb9d8c0a13291d3707231a000009fee23fd3a",
+    "explanation_text.py": "f238c287190f9450dc19e8d73039a83fdd5ff1a73e52de6584e4422803a2f50b"
+  },
+  "limitations": "6 handpicked requests, 13 cards; internal lexical rubric, no blind human panel; one attempt/case/model; no p95 or organizer-score claim.",
+  "models": [
+    {
+      "model": "gpt-4.1-mini",
+      "cases": [
+        {
+          "case": "corporate_hosts",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "корпоратив",
+            "category": "Ведущий",
+            "budget_kzt": 1000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 3.4787,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-mini-2025-04-14",
+              "input_tokens": 502,
+              "output_tokens": 48,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-88430",
+              "mode": "ai",
+              "quote": "Специализируюсь на проведении корпоративных мероприятий, торжеств и деловых встреч.",
+              "explanation": "Стоит рассмотреть для формата «корпоратив», если в приоритете специализация на корпоративных и деловых мероприятиях. В описании: «Специализируюсь на проведении корпоративных мероприятий, торжеств и деловых встреч».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 214
+            },
+            {
+              "id": "HK-29829",
+              "mode": "ai",
+              "quote": "Только развлечения и танцы.",
+              "explanation": "Стоит рассмотреть для формата «корпоратив», если в приоритете акцент на развлечениях и танцах. В описании: «Только развлечения и танцы».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 136
+            },
+            {
+              "id": "HK-27222",
+              "mode": "ai",
+              "quote": "Его стиль — европейская подача, тонкий юмор, уважение к традициям и умение создать атмосферу, в которой комфортно каждому гостю.",
+              "explanation": "Стоит рассмотреть для формата «корпоратив», если в приоритете подача с юмором. В описании: «Его стиль — европейская подача, тонкий юмор, уважение к традициям и умение создать атмосферу, в которой комфортно каждому гостю».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 221
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "wedding_photographers",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Фотограф",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 1.1491,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-mini-2025-04-14",
+              "input_tokens": 490,
+              "output_tokens": 48,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-30583",
+              "mode": "ai",
+              "quote": "Эстетика, атмосфера, детали — это все про меня.",
+              "explanation": "Формат «свадьба» и начальная цена подходят запросу; сравните особенность профиля. В описании: «Эстетика, атмосфера, детали — это все про меня».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 1,
+              "conditional_guidance": false,
+              "characters": 143
+            },
+            {
+              "id": "HK-16628",
+              "mode": "ai",
+              "quote": "Является свадебным и репортажным фотографом, умеет ловить живые эмоции и передавать атмосферу события через искренние, естественные кадры.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете репортажный подход к съёмке. В описании: «Является свадебным и репортажным фотографом, умеет ловить живые эмоции и передавать атмосферу события через искренние, естественные кадры».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 240
+            },
+            {
+              "id": "HK-53108",
+              "mode": "ai",
+              "quote": "Я фотограф и уже около семи лет я ловлю моменты, которые обычно проходят незаметно.",
+              "explanation": "Формат «свадьба» и начальная цена подходят запросу; сравните особенность профиля. В описании: «Я фотограф и уже около семи лет я ловлю моменты, которые обычно проходят незаметно».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": false,
+              "characters": 179
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "rare_florist",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Флорист",
+            "budget_kzt": 300000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 1.3165,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-mini-2025-04-14",
+              "input_tokens": 387,
+              "output_tokens": 20,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-39372",
+              "mode": "ai",
+              "quote": "Мы специализируемся на авторском цветочном оформлении и флористике для мероприятий в Алматы.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете цветочное оформление события. В описании: «Мы специализируемся на авторском цветочном оформлении и флористике для мероприятий в Алматы».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 195
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "live_band",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Лайв-бэнд",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 1.0059,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-mini-2025-04-14",
+              "input_tokens": 545,
+              "output_tokens": 20,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-23752",
+              "mode": "ai",
+              "quote": "Расширенный состав Thunder Breath Band: 🎤 два вокалиста 🎤 вокалистка 🥁 барабанщик 🎸 бас-гитарист 🎸 соло-гитарист 🎺 труба 🎷 саксофон 🎵 тромбон Репертуар включает ретро-хиты, треки из нулевых, современные композиции и казахскую музыку.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете состав музыкального коллектива. В описании: «Расширенный состав Thunder Breath Band: 🎤 два вокалиста 🎤 вокалистка 🥁 барабанщик 🎸 бас-гитарист 🎸 соло-гитарист 🎺 труба 🎷 саксофон 🎵 тромбон Репертуар включает ретро-хиты, треки из нулевых, современные композиции и казахскую музыку».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 338
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "restaurants",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Ресторан",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 1.3332,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-mini-2025-04-14",
+              "input_tokens": 621,
+              "output_tokens": 48,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-50695",
+              "mode": "ai",
+              "quote": "Пространство сочетает роскошный интерьер, уютные террасы, живую музыку и красивые виды на горы, создавая идеальное место для романтических ужинов, встреч и особых событий.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете панорамный вид. В описании: «Пространство сочетает роскошный интерьер, уютные террасы, живую музыку и красивые виды на горы, создавая идеальное место для романтических ужинов, встреч и особых событий».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 260
+            },
+            {
+              "id": "HK-64395",
+              "mode": "ai",
+              "quote": "Пространство сочетает современную атмосферу, уютные террасы и эффектные закаты, идеально подходя для мероприятий, романтических вечеров и отдыха в одном из самых живописных мест города.",
+              "explanation": "Формат «свадьба» и начальная цена подходят запросу; сравните особенность профиля. В описании: «Пространство сочетает современную атмосферу, уютные террасы и эффектные закаты, идеально подходя для мероприятий, романтических вечеров и отдыха в одном из самых живописных мест города».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": false,
+              "characters": 281
+            },
+            {
+              "id": "HK-58236",
+              "mode": "ai",
+              "quote": "Интерьер вдохновлён традиционной юртой и украшен национальными мотивами, а уютная атмосфера и аутентичная кухня делают это место идеальным для знакомства с казахской культурой и красивых вечеров.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете интерьер с национальными мотивами. В описании: «Интерьер вдохновлён традиционной юртой и украшен национальными мотивами, а уютная атмосфера и аутентичная кухня делают это место идеальным для знакомства с казахской культурой и красивых вечеров».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 303
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "available_venues",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-11-14",
+            "event_format": "свадьба",
+            "category": "Банкетный зал",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 1.0619,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-mini-2025-04-14",
+              "input_tokens": 479,
+              "output_tokens": 34,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-64395",
+              "mode": "ai",
+              "quote": "Nerima Terrace – стильная панорамная локация в Алматы с захватывающим видом на город и горы.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете панорамный вид. В описании: «Nerima Terrace – стильная панорамная локация в Алматы с захватывающим видом на город и горы».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 181
+            },
+            {
+              "id": "HK-90011",
+              "mode": "ai",
+              "quote": "Панорамные окна, вместимость зала до 200 гостей, свой кейтеринг и парковка для гостей мероприятия.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете панорамный вид. В описании: «Панорамные окна, вместимость зала до 200 гостей, свой кейтеринг и парковка для гостей мероприятия».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 187
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        }
+      ],
+      "summary": {
+        "cards": 13,
+        "ai_cards": 13,
+        "source_exact": 13,
+        "unique_source": 13,
+        "rubric_points": 25,
+        "rubric_max": 26,
+        "conditional_guidance": 10,
+        "mean_characters": 221.4,
+        "median_seconds": 1.2328,
+        "max_seconds": 3.4787,
+        "estimated_usd": 0.001558
+      }
+    },
+    {
+      "model": "gpt-4.1",
+      "cases": [
+        {
+          "case": "corporate_hosts",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "корпоратив",
+            "category": "Ведущий",
+            "budget_kzt": 1000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 0.8649,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-2025-04-14",
+              "input_tokens": 502,
+              "output_tokens": 48,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-88430",
+              "mode": "ai",
+              "quote": "Специализируюсь на проведении корпоративных мероприятий, торжеств и деловых встреч.",
+              "explanation": "Стоит рассмотреть для формата «корпоратив», если в приоритете специализация на корпоративных и деловых мероприятиях. В описании: «Специализируюсь на проведении корпоративных мероприятий, торжеств и деловых встреч».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 214
+            },
+            {
+              "id": "HK-29829",
+              "mode": "ai",
+              "quote": "Только развлечения и танцы.",
+              "explanation": "Стоит рассмотреть для формата «корпоратив», если в приоритете акцент на развлечениях и танцах. В описании: «Только развлечения и танцы».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 136
+            },
+            {
+              "id": "HK-27222",
+              "mode": "ai",
+              "quote": "Его стиль — европейская подача, тонкий юмор, уважение к традициям и умение создать атмосферу, в которой комфортно каждому гостю.",
+              "explanation": "Стоит рассмотреть для формата «корпоратив», если в приоритете подача с юмором. В описании: «Его стиль — европейская подача, тонкий юмор, уважение к традициям и умение создать атмосферу, в которой комфортно каждому гостю».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 221
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "wedding_photographers",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Фотограф",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 0.8919,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-2025-04-14",
+              "input_tokens": 490,
+              "output_tokens": 48,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-30583",
+              "mode": "ai",
+              "quote": "Эстетика, атмосфера, детали — это все про меня.",
+              "explanation": "Формат «свадьба» и начальная цена подходят запросу; сравните особенность профиля. В описании: «Эстетика, атмосфера, детали — это все про меня».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 1,
+              "conditional_guidance": false,
+              "characters": 143
+            },
+            {
+              "id": "HK-16628",
+              "mode": "ai",
+              "quote": "Является свадебным и репортажным фотографом, умеет ловить живые эмоции и передавать атмосферу события через искренние, естественные кадры.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете репортажный подход к съёмке. В описании: «Является свадебным и репортажным фотографом, умеет ловить живые эмоции и передавать атмосферу события через искренние, естественные кадры».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 240
+            },
+            {
+              "id": "HK-53108",
+              "mode": "ai",
+              "quote": "Я фотограф и уже около семи лет я ловлю моменты, которые обычно проходят незаметно.",
+              "explanation": "Формат «свадьба» и начальная цена подходят запросу; сравните особенность профиля. В описании: «Я фотограф и уже около семи лет я ловлю моменты, которые обычно проходят незаметно».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": false,
+              "characters": 179
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "rare_florist",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Флорист",
+            "budget_kzt": 300000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 0.7801,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-2025-04-14",
+              "input_tokens": 387,
+              "output_tokens": 20,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-39372",
+              "mode": "ai",
+              "quote": "Мы специализируемся на авторском цветочном оформлении и флористике для мероприятий в Алматы.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете цветочное оформление события. В описании: «Мы специализируемся на авторском цветочном оформлении и флористике для мероприятий в Алматы».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 195
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "live_band",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Лайв-бэнд",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 0.7511,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-2025-04-14",
+              "input_tokens": 545,
+              "output_tokens": 20,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-23752",
+              "mode": "ai",
+              "quote": "Расширенный состав Thunder Breath Band: 🎤 два вокалиста 🎤 вокалистка 🥁 барабанщик 🎸 бас-гитарист 🎸 соло-гитарист 🎺 труба 🎷 саксофон 🎵 тромбон Репертуар включает ретро-хиты, треки из нулевых, современные композиции и казахскую музыку.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете состав музыкального коллектива. В описании: «Расширенный состав Thunder Breath Band: 🎤 два вокалиста 🎤 вокалистка 🥁 барабанщик 🎸 бас-гитарист 🎸 соло-гитарист 🎺 труба 🎷 саксофон 🎵 тромбон Репертуар включает ретро-хиты, треки из нулевых, современные композиции и казахскую музыку».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 338
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "restaurants",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Ресторан",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 0.9197,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-2025-04-14",
+              "input_tokens": 621,
+              "output_tokens": 48,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-50695",
+              "mode": "ai",
+              "quote": "Пространство сочетает роскошный интерьер, уютные террасы, живую музыку и красивые виды на горы, создавая идеальное место для романтических ужинов, встреч и особых событий.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете панорамный вид. В описании: «Пространство сочетает роскошный интерьер, уютные террасы, живую музыку и красивые виды на горы, создавая идеальное место для романтических ужинов, встреч и особых событий».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 260
+            },
+            {
+              "id": "HK-64395",
+              "mode": "ai",
+              "quote": "Nerima Terrace – стильная панорамная локация в Алматы с захватывающим видом на город и горы.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете панорамный вид. В описании: «Nerima Terrace – стильная панорамная локация в Алматы с захватывающим видом на город и горы».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 181
+            },
+            {
+              "id": "HK-58236",
+              "mode": "ai",
+              "quote": "Интерьер вдохновлён традиционной юртой и украшен национальными мотивами, а уютная атмосфера и аутентичная кухня делают это место идеальным для знакомства с казахской культурой и красивых вечеров.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете интерьер с национальными мотивами. В описании: «Интерьер вдохновлён традиционной юртой и украшен национальными мотивами, а уютная атмосфера и аутентичная кухня делают это место идеальным для знакомства с казахской культурой и красивых вечеров».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 303
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        },
+        {
+          "case": "available_venues",
+          "request": {
+            "city": "Алматы",
+            "date": "2026-11-14",
+            "event_format": "свадьба",
+            "category": "Банкетный зал",
+            "budget_kzt": 10000000,
+            "language": null,
+            "duration_hours": null
+          },
+          "seconds": 0.9481,
+          "order_unchanged": true,
+          "provider": [
+            {
+              "status": 200,
+              "snapshot": "gpt-4.1-2025-04-14",
+              "input_tokens": 479,
+              "output_tokens": 34,
+              "cached_tokens": 0
+            }
+          ],
+          "cards": [
+            {
+              "id": "HK-64395",
+              "mode": "ai",
+              "quote": "Nerima Terrace – стильная панорамная локация в Алматы с захватывающим видом на город и горы.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете панорамный вид. В описании: «Nerima Terrace – стильная панорамная локация в Алматы с захватывающим видом на город и горы».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 181
+            },
+            {
+              "id": "HK-90011",
+              "mode": "ai",
+              "quote": "Панорамные окна, вместимость зала до 200 гостей, свой кейтеринг и парковка для гостей мероприятия.",
+              "explanation": "Стоит рассмотреть для формата «свадьба», если в приоритете панорамный вид. В описании: «Панорамные окна, вместимость зала до 200 гостей, свой кейтеринг и парковка для гостей мероприятия».",
+              "source_exact": true,
+              "unique_source_in_result": true,
+              "rubric_points": 2,
+              "conditional_guidance": true,
+              "characters": 187
+            }
+          ],
+          "repeat_identical": true,
+          "repeat_no_network": true
+        }
+      ],
+      "summary": {
+        "cards": 13,
+        "ai_cards": 13,
+        "source_exact": 13,
+        "unique_source": 13,
+        "rubric_points": 25,
+        "rubric_max": 26,
+        "conditional_guidance": 11,
+        "mean_characters": 213.7,
+        "median_seconds": 0.8784,
+        "max_seconds": 0.9481,
+        "estimated_usd": 0.007792
+      }
+    }
+  ]
+}
