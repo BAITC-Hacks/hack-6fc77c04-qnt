@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from .budget import CallBudget
 from .catalog import Catalog, DEFAULT_DATASET, load_catalog
 from .explanations import EvidenceSelector
 from .matching import match
@@ -35,6 +36,7 @@ def create_app(dataset_path: Path = DEFAULT_DATASET, *, catalog: Catalog | None 
                 client, api_key=os.getenv("OPENAI_API_KEY", ""),
                 enabled=os.getenv("ENABLE_AI", "false").lower() == "true",
                 model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+                budget=CallBudget.from_env(ROOT),
             )
             yield
 
