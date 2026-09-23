@@ -31,3 +31,4 @@ jobs:
         env:
           ENABLE_AI: 'false'
       - run: python backend/scripts/demo_check.py
+      - run: python backend/scripts/acceptance_check.py
