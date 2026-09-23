@@ -16,8 +16,8 @@ export function evidenceValue(field: string, value: string): string {
 
 export function ResultSummary({ result, date }: { result: Match; date: string }) {
  const displayDate = date.split('-').reverse().join('.');
- return <div className="summary result-summary">
-  <p className="eyebrow">{result.status === 'matches_found' ? 'ПОДБОР ГОТОВ' : result.status === 'category_missing' ? 'КАТЕГОРИИ НЕТ В ЭТОМ ГОРОДЕ' : 'НЕТ СОВПАДЕНИЙ ПО УСЛОВИЯМ'}</p>
+ const title = result.status === 'matches_found' ? 'ПОДБОР ГОТОВ' : result.status === 'category_missing' ? 'КАТЕГОРИИ НЕТ В ЭТОМ ГОРОДЕ' : 'НЕТ СОВПАДЕНИЙ ПО УСЛОВИЯМ';
+ const information = <>
   <dl className="result-counts">
    <div><dt>В городе и категории</dt><dd>{result.total_in_category}</dd></div>
    <div><dt>Подходят по условиям</dt><dd>{result.eligible_count}</dd></div>
@@ -27,7 +27,14 @@ export function ResultSummary({ result, date }: { result: Match; date: string })
    {result.eligible_count < 3 && <p>{result.eligible_count > 0 ? 'Показаны все подходящие варианты.' : 'Ни один профиль не прошёл все условия.'} {result.rejections.some(r => r.count > 0) ? 'Причины отсева — под результатами; можно изменить условия и повторить подбор.' : 'В каталоге мало профилей этой категории.'}</p>}
    <p className="calendar-note">Исключено по занятости: {result.rejections.find(r => r.code === 'busy')?.count ?? 0}. Смена даты может изменить подбор.<br/>Дата: {displayDate} · проверена по учебному календарю.<br/>Доступность и бронь нужно подтвердить у подрядчика.</p>
   </>}
- </div>;
+ </>;
+ return <><div className="summary result-summary desktop-summary">
+  <p className="eyebrow">{title}</p>{information}
+ </div>
+ <details className="mobile-summary" open={result.eligible_count < 3}>
+  <summary>{result.returned_count > 0 ? `Подбор готов · ${result.returned_count} ${result.returned_count === 1 ? 'вариант' : result.returned_count === 2 ? 'варианта' : 'варианта'}` : title}</summary>
+  <div className="mobile-summary-body">{information}<p>Соответствие условиям проверяет программный код. AI может выбрать цитату для объяснения; local — объяснение без AI.</p></div>
+ </details></>;
 }
 
 export function ContractorCard({ card, index = 0, selected = false, selectingReplacement = false, onSelect }: { card: Card; index?: number; selected?: boolean; selectingReplacement?: boolean; onSelect?: () => void }) {

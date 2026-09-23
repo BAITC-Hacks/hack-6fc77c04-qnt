@@ -38,4 +38,9 @@ describe('Readable evidence presentation', () => {
   expect(html).toContain('Доступность и бронь нужно подтвердить');
   expect(html).not.toContain('Legacy long paragraph');
  });
+ it.each([0, 1, 2, 3])('keeps the mobile explanation visible when only %i options qualify', count => {
+  const result: Match = { status: count ? 'matches_found' : 'no_matches', message: '', total_in_category: 5, eligible_count: count, returned_count: count, cards: [], rejections: [{code:'busy',count:5-count}] };
+  const html = renderToStaticMarkup(<ResultSummary result={result} date="2026-10-10"/>);
+  expect(html.includes('class="mobile-summary" open=""')).toBe(count < 3);
+ });
 });
