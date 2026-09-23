@@ -4,7 +4,7 @@ import { demo, getOptions, match } from './api';
 import { examples } from './demo';
 import type { Options, Match, Request, Reason } from './types';
 import './style.css';
-const money = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
+import { ContractorCard, ResultSummary } from './ResultDetails';
 const reasons: Record<Reason, string> = { busy: 'Заняты в эту дату', format: 'Другой формат', budget: 'Выше бюджета', language: 'Не подходит язык', duration: 'Не подходит длительность' };
 function App() {
  const [options, setOptions] = useState<Options>();
@@ -55,10 +55,10 @@ function App() {
   </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button></form>}
   <div className="examples"><p>Попробуйте готовый пример</p><div>{examples.map(e => <button key={e.title} disabled={!options} onClick={() => example(e.request)}>{e.title}</button>)}</div><small>Пример заполняет форму. Нажмите кнопку подбора.</small></div></section>
   <section className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step">02</span><h2 id="results-title">Ваш подбор</h2></div>
-  <div aria-live="polite" aria-atomic="true">{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <div className="summary"><p className="eyebrow">{result.status === 'matches_found' ? `НАЙДЕНО: ${result.eligible_count} · ПОКАЗАНО: ${result.returned_count}` : result.status === 'category_missing' ? 'КАТЕГОРИИ НЕТ В ЭТОМ ГОРОДЕ' : 'НЕТ СОВПАДЕНИЙ ПО УСЛОВИЯМ'}</p><p>{result.message}</p></div>}</div>
+  <div aria-live="polite" aria-atomic="true">{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <ResultSummary result={result} date={form.date}/>}</div>
   {error && <div className="error" role="alert">{error}<p>Параметры сохранены. Повторите подбор.</p></div>}
   {!result && !loading && !error && <div className="empty"><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
-  {result?.cards.map(card => <article className="card" key={card.id}><div className="card-top"><div><p className="meta">{card.category} · {card.city}</p><h3>{card.name}</h3></div><strong className="price">от {money(card.price_from_kzt)} ₸</strong></div><p>{card.explanation}</p><div className="pills"><span>{card.explanation_mode === 'ai' ? 'AI · выбор фактов' : 'local · локальное объяснение'}</span>{card.flags.synthetic && <span>synthetic · синтетический профиль</span>}{card.flags.city_imputed && <span>city_imputed · город дополнен</span>}{card.flags.price_imputed && <span>price_imputed · цена дополнена</span>}</div><details><summary>Факты-основания</summary><dl><dt>Языки</dt><dd>{card.languages.join(', ') || 'Не указаны'}</dd><dt>Лимит часов</dt><dd>{card.max_hours ?? 'Ограничение неприменимо'}</dd>{card.evidence.map((e, i) => <div key={i}><dt>{e.field}</dt><dd>{e.value}</dd></div>)}</dl></details></article>)}
+  {result?.cards.map(card => <ContractorCard key={card.id} card={card}/>)}
   {result && <><details className="filters"><summary>Как условия повлияли на подбор</summary><p>В городе и категории: {result.total_in_category}. Последовательные фильтры: каждый исключённый кандидат учитывается только по первой причине.</p><ul>{result.rejections.map(r => <li key={r.code}>{reasons[r.code]} <strong>{r.count}</strong></li>)}</ul></details>{result.returned_count === 0 && <button onClick={() => firstField.current?.focus()}>Изменить условия ↑</button>}</>}
   </section></div><footer>Источник: учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны только отдельные вымышленные фикстуры.'} Подбор не является бронированием.</footer></main>
  </>;

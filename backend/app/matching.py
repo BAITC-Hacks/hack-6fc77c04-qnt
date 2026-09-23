@@ -25,7 +25,7 @@ DETAIL_PATTERN = re.compile(
     r"струн|духов|перкус|клавиш|барабан|гитар|скрип|саксофон|контрабас|джаз|"
     r"документал|фотожурнал|репортаж|концерт|жанр|портрет|печат|рамк|брендир|"
     r"сценограф|неон|арки|фотозон|президиум|кейтеринг|парковк|резидент|финалист|"
-    r"живые кадры|настоящие улыбки|живые эмоции|не про позы)"
+    r"эстетик|живые кадры|настоящие улыбки|живые эмоции|не про позы)"
 )
 OPERATIONAL_PATTERN = re.compile(
     r"язык|двуязыч|билингв|\bна\s+(?:русск|казахск|английск)\w*|"
@@ -70,28 +70,35 @@ def snippets(c: Contractor) -> list[str]:
     return (detailed or safe)[:16]
 
 
-def local_snippet(c: Contractor, r: MatchRequest) -> str | None:
+def relevant_snippets(c: Contractor, r: MatchRequest) -> list[str]:
+    """Keep event-aside client lists out of both selectors when alternatives exist.
+
+    This only changes explanation evidence, never matching or contractor order.
+    """
     candidates = snippets(c)
+    focused = [s for s in candidates if not (
+        re.search(r"\b(?:помимо|кроме)\b", s, re.I) and format_mentioned(s, r.event_format)
+    )]
+    return focused or candidates
+
+
+def local_snippet(c: Contractor, r: MatchRequest) -> str | None:
+    candidates = relevant_snippets(c, r)
     if not candidates:
         return None
     def relevance(sentence: str):
-        return (detail_score(sentence),
-                int(format_mentioned(sentence, r.event_format)),
-                int(bool(re.search(r"\d", sentence))))
+        # An aside about other work is not evidence of event specialization.
+        aside = bool(re.search(r"\b(?:помимо|кроме)\b", sentence, re.I))
+        return (int(format_mentioned(sentence, r.event_format) and not aside),
+                -int(aside), detail_score(sentence))
     # max preserves source order for equal keys; greetings have no concrete signals.
     return max(candidates, key=relevance)
 
 
 def explanation(c: Contractor, r: MatchRequest, quote: str | None) -> str:
-    price = f"{c.price_from_kzt:,}".replace(",", " ")
-    parts = [f"{c.name}: от {price} ₸ — в пределах бюджета", f"формат «{r.event_format}» указан в каталоге",
-             f"на {r.date.strftime('%d.%m.%Y')} не отмечен занятым"]
-    if r.language:
-        parts.append(f"язык — {r.language}")
-    if r.duration_hours is not None:
-        parts.append(f"лимит {c.max_hours:g} ч покрывает {r.duration_hours:g} ч" if c.max_hours is not None
-                     else "работа не привязана к часам присутствия")
-    result = "; ".join(parts) + "."
+    # Price, calendar, language and hours remain in structured evidence. Avoid
+    # repeating the form/name in prose; never turn a base price into a final quote.
+    result = f"Формат «{r.event_format}» указан в каталоге; начальная цена в пределах бюджета."
     if quote:
         result += " В описании: «" + quote.rstrip(".!? ") + "»."
     return result

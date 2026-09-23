@@ -38,7 +38,7 @@ def test_rare_null_hours(catalog, payload):
     assert result.status == "matches_found"
     assert [c.id for c in result.cards] == ["HK-39372"]
     assert result.cards[0].max_hours is None
-    assert "не привязана" in result.cards[0].explanation
+    assert next(e.value for e in result.cards[0].evidence if e.field == "max_hours") == "неприменимо"
     assert "отсев" in result.message
 
 
