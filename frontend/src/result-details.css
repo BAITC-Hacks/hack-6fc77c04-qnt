@@ -23,3 +23,15 @@
 .choice-reason{padding:13px}
 .evidence-list>div{grid-template-columns:1fr;gap:3px}
 }
+
+.card-actions{grid-column:1/-1;grid-row:5;display:flex;justify-content:flex-end;margin-top:12px}
+.select-contractor{background:var(--ink);color:#fff;border-color:var(--ink);font-size:13px;padding:10px 18px}
+.select-contractor:hover{background:#463a2d}
+.select-contractor:disabled{opacity:1;cursor:default;color:var(--muted);background:#eee6db;border-color:var(--line)}
+.estimate-nav{background:#f6f0e7;color:#25211d;font-size:13px;white-space:nowrap}
+.estimate-anchor{scroll-margin-top:24px;outline:none}
+.estimate-feedback,.estimate-conflict,.replacement-note{font-size:13px;background:#eee6db;border:1px solid var(--line);border-radius:8px;padding:14px}
+.estimate-conflict button{margin:4px 8px 4px 0}
+.replacement-note{margin-bottom:12px}
+.replacement-note p{margin:0 0 8px}
+@media(max-width:760px){.card-actions{justify-content:stretch}.card-actions button{width:100%}.brand{font-size:25px;gap:8px}.brand-case{font-size:10px;padding-left:8px}.estimate-nav{padding:8px 10px}}

@@ -1,0 +1,27 @@
+.estimate-panel{margin-top:32px;padding:24px;background:#fcf9f4;border:1px solid var(--line);border-radius:10px;color:var(--ink)}
+.estimate-heading{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.estimate-heading .eyebrow{color:var(--accent);margin:0 0 8px}
+.estimate-heading h2{font:32px/1.15 Georgia,serif;letter-spacing:-.8px}
+.estimate-heading button{font-size:12px;flex-shrink:0}
+.estimate-empty,.estimate-context,.estimate-note,.estimate-help{font-size:13px;line-height:1.6;color:var(--muted)}
+.estimate-empty{max-width:680px;margin:20px 0}
+.estimate-context{color:var(--ink);margin:16px 0}
+.estimate-context span{padding:0 6px;color:var(--accent)}
+.estimate-items{padding:0;margin:0;list-style:none}
+.estimate-items>li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:24px;border-top:1px solid var(--line);padding:18px 0}
+.estimate-person{min-width:0}
+.estimate-category{font-size:12px;color:var(--muted)}
+.estimate-person h3{font:24px/1.2 Georgia,serif;letter-spacing:-.5px;margin:4px 0 0;overflow-wrap:anywhere}
+.estimate-provenance{display:block;font-size:11px;color:var(--muted);margin-top:6px}
+.estimate-conditions{font-size:12px;color:var(--muted);margin:7px 0 0}
+.estimate-price{margin:0;font-size:15px;text-align:right;white-space:nowrap}
+.estimate-price span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.estimate-actions{display:flex;gap:8px;flex-wrap:wrap}
+.estimate-actions button{font-size:12px}
+.estimate-total{display:flex;justify-content:space-between;align-items:center;gap:20px;border-top:1px solid var(--line);padding-top:20px;font-size:15px}
+.estimate-total small{display:block;font-size:12px;margin-top:5px}
+.estimate-total strong{font:30px/1.2 Georgia,serif;color:var(--accent);text-align:right;overflow-wrap:anywhere}
+.estimate-help{margin:20px 0 0;font-size:12px}
+.estimate-note{margin:18px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:12px}
+@media(max-width:760px){.estimate-panel{padding:20px}.estimate-heading{align-items:flex-start;flex-wrap:wrap;gap:12px}.estimate-heading h2{font-size:28px}.estimate-items>li{grid-template-columns:minmax(0,1fr) auto;gap:14px}.estimate-actions{grid-column:1/-1}.estimate-total{align-items:flex-start;flex-wrap:wrap;gap:12px}.estimate-total strong{font-size:27px}.estimate-price{font-size:14px}}
+@media print{.estimate-actions,.estimate-heading button,.estimate-help{display:none}.estimate-panel{break-inside:avoid;background:white}}
