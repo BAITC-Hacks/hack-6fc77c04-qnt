@@ -1,5 +1,5 @@
 import { demoMatch, demoOptions } from './demo';
-import type { Options, Match, Request } from './types';
+import type { Options, Match, Request, Recovery } from './types';
 export const demo = import.meta.env.VITE_DEMO_MODE === 'true';
 export async function api<T>(path: string, signal: AbortSignal, body?: Request): Promise<T> {
  if (demo) return (body ? demoMatch(body) : demoOptions) as T;
@@ -16,3 +16,4 @@ export async function api<T>(path: string, signal: AbortSignal, body?: Request):
 }
 export const getOptions = (signal: AbortSignal) => api<Options>('options', signal);
 export const match = (body: Request, signal: AbortSignal) => api<Match>('match', signal, body);
+export const getSuggestions = (body: Request, signal: AbortSignal) => demo ? Promise.resolve<Recovery>({suggestions: []}) : api<Recovery>('suggestions', signal, body);

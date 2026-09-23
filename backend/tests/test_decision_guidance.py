@@ -9,11 +9,12 @@ def test_three_distinct_buying_reasons_without_names(catalog, payload):
     request = MatchRequest(**payload)
     result, _ = match(request, catalog)
     leads = [c.explanation.split(' В описании: ')[0] for c in result.cards]
-    assert 'корпоративных и деловых' in leads[0]
-    assert 'развлечениях и танцах' in leads[1]
+    assert 'корпоративные и деловые' in leads[0]
+    assert 'развлечения и танцы' in leads[1]
     assert 'юмором' in leads[2]
     assert len(set(leads)) == 3
-    assert all('если в приоритете' in lead for lead in leads)
+    assert all(len(lead) <= 80 for lead in leads)
+    assert all('если в приоритете' not in lead for lead in leads)
     assert all(card.name not in card.explanation for card in result.cards)
 
 
@@ -39,9 +40,9 @@ def test_catalog_windows_do_not_promise_a_view(catalog, payload):
     contractor = next(c for c in catalog.contractors if c.id == 'HK-90011')
     quote = local_snippet(contractor, request)
     assert 'Панорамные окна' in quote
-    assert decision_lens(request, quote) == 'панорамные окна'
+    assert decision_lens(request, quote) == 'вместимость — до 200 гостей'
     text = explanation_text(request, quote)
-    assert 'если в приоритете панорамные окна.' in text
+    assert text.startswith('Вместимость — до 200 гостей.')
     assert 'панорамный вид' not in text
     assert quote.rstrip('.!? ') in text
 
@@ -64,10 +65,52 @@ def test_panorama_adjective_alone_does_not_establish_a_view(payload, quote):
 
 def test_sparse_source_is_not_upgraded_to_a_guarantee(payload):
     request = MatchRequest(**{**payload, 'category': 'Фотограф', 'event_format': 'свадьба'})
-    assert decision_lens(request, 'Эстетика, атмосфера, детали — это все про меня.') is None
+    assert decision_lens(request, 'Эстетика, атмосфера, детали — это все про меня.') == 'акцент в описании — эстетика, атмосфера и детали'
     text = explanation_text(request, None)
     assert 'недостаточно конкретных фактов' in text
     assert 'лучший' not in text
+
+
+def test_windows_alone_remain_windows(payload):
+    request = MatchRequest(**{**payload, 'category': 'Банкетный зал'})
+    assert decision_lens(request, 'В зале панорамные окна.') == 'панорамные окна'
+
+
+def test_floral_decoration_does_not_automatically_become_authorial(payload):
+    request = MatchRequest(**{**payload, 'category': 'Флорист'})
+    assert 'авторск' not in explanation_text(request, 'Цветочное оформление мероприятий.')
+
+
+def test_photographers_age_does_not_become_years_of_experience(payload):
+    request = MatchRequest(**{**payload, 'category': 'Фотограф'})
+    assert decision_lens(request, 'Я фотограф, моему ребёнку около семи лет.') is None
+    assert decision_lens(request, 'Я фотограф и уже около семи лет я ловлю моменты, которые обычно проходят незаметно.') == 'опыт съёмки — около семи лет'
+
+
+def test_next_date_still_has_distinct_source_backed_leads(catalog, payload):
+    result, _ = match(MatchRequest(**{**payload, 'date': '2026-10-11'}), catalog)
+    leads = [c.explanation.split(' В описании: ')[0] for c in result.cards]
+    assert len(set(leads)) == 3
+    assert any('DJ' in lead and 'оборудование' in lead for lead in leads)
+    assert any('более 10 лет' in lead for lead in leads)
+    assert all(len(lead) < 80 for lead in leads)
+
+
+def test_unrecognized_detail_is_attributed_without_invented_benefit(payload):
+    text = explanation_text(MatchRequest(**payload), 'Программу веду в образе Шерлока Холмса.')
+    assert text.startswith('В профиле: «Программу веду в образе Шерлока Холмса».')
+    assert 'лучший' not in text and 'опыт' not in text
+
+
+@pytest.mark.parametrize(('quote', 'expected'), [
+    ('Террасы, живая музыка и красивые виды на горы.', 'террасы, живая музыка и виды на горы'),
+    ('Уютные террасы и эффектные закаты.', 'в описании — террасы и закаты'),
+    ('Интерьер вдохновлён традиционной юртой.', 'интерьер в стиле традиционной юрты'),
+])
+def test_restaurant_distinction_is_a_concrete_source_feature(payload, quote, expected):
+    request = MatchRequest(**{**payload, 'category': 'Ресторан'})
+    assert decision_lens(request, quote) == expected
+    assert 'лучший' not in explanation_text(request, quote)
 
 
 def test_long_unpunctuated_lists_are_exact_shorter_sources(catalog, payload):

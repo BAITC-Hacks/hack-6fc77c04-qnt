@@ -25,7 +25,7 @@ export function ResultSummary({ result, date }: { result: Match; date: string })
   </dl>
   {result.status === 'category_missing' ? <p>Выберите другой город или категорию — в этом разделе каталога пока нет профилей.</p> : <>
    {result.eligible_count < 3 && <p>{result.eligible_count > 0 ? 'Показаны все подходящие варианты.' : 'Ни один профиль не прошёл все условия.'} {result.rejections.some(r => r.count > 0) ? 'Причины отсева — под результатами; можно изменить условия и повторить подбор.' : 'В каталоге мало профилей этой категории.'}</p>}
-   <p className="calendar-note">Исключено по занятости: {result.rejections.find(r => r.code === 'busy')?.count ?? 0}. Смена даты может изменить подбор.<br/>Дата: {displayDate} · проверена по учебному календарю.<br/>Доступность и бронь нужно подтвердить у подрядчика.</p>
+   <p className="calendar-note">На {displayDate} исключено по занятости: {result.rejections.find(r => r.code === 'busy')?.count ?? 0}. Проверено по учебному календарю. Доступность и бронь нужно подтвердить у подрядчика.</p>
   </>}
  </>;
  return <><div className="summary result-summary desktop-summary">
@@ -44,19 +44,21 @@ export function ContractorCard({ card, index = 0, selected = false, selectingRep
  // Old or independently supplied contract responses remain readable as-is.
  const separateQuote = split >= 0 && Boolean(quote);
  const facts = card.evidence.filter(e => !(separateQuote && e.field === 'description'));
- return <article className="card">
+ return <article className={`card compact-card${index === 0 ? ' first-candidate' : ''}`}>
   <div className="card-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}<span> / ПОДБОР</span></div><div className="card-body">
-  <div className="card-top"><div><p className="meta">{card.category} · {card.city}</p><h3>{card.name}</h3></div><strong className="price">от {money(card.price_from_kzt)} ₸</strong></div>
+  <div className="card-top"><div><div className="candidate-meta"><p className="meta">{card.category} · {card.city}</p>{index === 0 && <span className="first-candidate-label">Первый в подборе</span>}</div><h3>{card.name}</h3></div><strong className="price">от {money(card.price_from_kzt)} ₸</strong></div>
   <section className="choice-reason" aria-label="Почему подходит">
-   <div className="reason-heading"><h4>Почему подходит</h4><span className={`explanation-badge ${card.explanation_mode}`}>{card.explanation_mode === 'ai' ? 'AI выбрал факт' : 'Без AI · по данным каталога'}</span></div>
-   <p>{separateQuote ? card.explanation.slice(0, split) : card.explanation}</p>
-   {separateQuote && <blockquote><p>«{quote}»</p><cite>Из описания подрядчика</cite></blockquote>}
+   <div className={`reason-conclusion ${card.explanation_mode}`}>
+    <div className="reason-heading"><h4 className={`explanation-badge ${card.explanation_mode}`}>{card.explanation_mode === 'ai' ? 'AI выбрал факт' : 'Без AI · факт из каталога'}</h4><span>Почему подходит</span></div>
+    <p className="reason-text">{separateQuote ? card.explanation.slice(0, split) : card.explanation}</p>
+   </div>
+   {separateQuote && <div className="source-proof"><p className="source-label">Из описания подрядчика</p><blockquote><p>«{quote}»</p></blockquote></div>}
   </section>
   <div className="pills">{card.flags.synthetic && <span>Синтетический профиль</span>}{card.flags.city_imputed && <span>Город дополнен в каталоге</span>}{card.flags.price_imputed && <span>Цена дополнена в каталоге</span>}</div>
-  <details><summary>Проверенные условия и факты</summary><dl className="evidence-list">
+  <details className="verified-facts" open><summary>Проверенные условия и факты</summary><dl className="evidence-list">
    {!facts.some(e => e.field === 'languages') && <div><dt>Языки работы</dt><dd>{card.languages.join(', ') || 'Не указаны'}</dd></div>}
    {!facts.some(e => e.field === 'max_hours') && <div><dt>Продолжительность работы</dt><dd>{card.max_hours === null ? 'Не ограничена часами присутствия' : `${money(card.max_hours)} ч`}</dd></div>}
-   {facts.map((e, i) => <div key={i}><dt>{labels[e.field] ?? 'Дополнительный факт'}</dt><dd>{evidenceValue(e.field, e.value)}</dd></div>)}
+   {facts.map((e, i) => <div className={e.field === 'ranking' || e.field === 'description' ? 'wide-fact' : undefined} key={i}><dt>{labels[e.field] ?? 'Дополнительный факт'}</dt><dd>{evidenceValue(e.field, e.value)}</dd></div>)}
   </dl></details>
   {onSelect && <div className="card-actions"><button type="button" className="select-contractor" disabled={selected} onClick={onSelect} aria-label={selected ? `${card.name} уже в смете` : selectingReplacement ? `Заменить на ${card.name}` : `Добавить ${card.name} в смету`}>{selected ? 'В смете ✓' : selectingReplacement ? 'Выбрать на замену' : 'Выбрать в смету'}</button></div>}
  </div></article>;

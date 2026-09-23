@@ -19,6 +19,7 @@ export function ResultsFooter({ result }: { result: Match }) {
     <p className="results-filter-overview">В городе и категории: <strong>{result.total_in_category}</strong>. Подходят всем условиям: <strong>{result.eligible_count}</strong>.</p>
     {result.rejections.length > 0 && <ul>{result.rejections.map(reason => <li key={reason.code} className={reason.count === 0 ? 'no-exclusions' : undefined}><span>{labels[reason.code]}</span><strong>{reason.count}</strong></li>)}</ul>}
     <p className="results-filter-note">Каждый исключённый профиль учтён один раз — по первой причине, по которой не прошёл проверку.</p>
+    <p className="results-filter-note">Условия и порядок проверяет программа. AI выбирает подтверждающую цитату; короткий вывод составляется из проверенного факта. Без AI доступны те же условия подбора и объяснения по каталогу.</p>
    </div>
   </details>
  </div>;

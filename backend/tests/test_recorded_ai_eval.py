@@ -8,6 +8,25 @@ from app.models import MatchRequest
 
 ROOT = Path(__file__).resolve().parents[2]
 
+# The real trials keep their original formatter and timings. These are explicit
+# expectations for replaying the SAME chosen evidence through the concise UI
+# formatter, not a new AI experiment or a replacement for the published report.
+CONCISE_LEADS = {
+    ('HK-88430', 'Ведущий'): 'Специализация — корпоративные и деловые мероприятия.',
+    ('HK-29829', 'Ведущий'): 'Акцент — развлечения и танцы.',
+    ('HK-27222', 'Ведущий'): 'Подача с юмором.',
+    ('HK-30583', 'Фотограф'): 'Акцент в описании — эстетика, атмосфера и детали.',
+    ('HK-16628', 'Фотограф'): 'Репортажный подход к съёмке.',
+    ('HK-53108', 'Фотограф'): 'Опыт съёмки — около семи лет.',
+    ('HK-39372', 'Флорист'): 'Авторское цветочное оформление.',
+    ('HK-23752', 'Лайв-бэнд'): 'Репертуар: ретро-хиты, музыка нулевых и казахская музыка.',
+    ('HK-50695', 'Ресторан'): 'Террасы, живая музыка и виды на горы.',
+    ('HK-64395', 'Ресторан'): 'В описании — террасы и закаты.',
+    ('HK-58236', 'Ресторан'): 'Интерьер в стиле традиционной юрты.',
+    ('HK-64395', 'Банкетный зал'): 'Панорамный вид.',
+    ('HK-90011', 'Банкетный зал'): 'Вместимость — до 200 гостей.',
+}
+
 
 def test_published_ai_trials_are_replayable_source_evidence(catalog):
     report = json.loads((ROOT/'docs/ai-eval-results.json').read_text())
@@ -24,13 +43,17 @@ def test_published_ai_trials_are_replayable_source_evidence(catalog):
             for recorded, original in zip(case['cards'], selected):
                 assert recorded['mode'] == 'ai'
                 assert recorded['quote'] in relevant_snippets(original, request)
-                expected = recorded['explanation']
+                source_suffix = ' В описании: «' + recorded['quote'].rstrip('.!? ') + '».'
+                assert recorded['explanation'].endswith(source_suffix)
                 if original.id == 'HK-90011':
-                    # Preserve the real trial verbatim. Its formatter predated the
-                    # windows/view correction; the model's selected quote is unchanged.
+                    # The historical formatter predated the windows/view fix;
+                    # preserve that mistake in the report instead of rewriting history.
                     assert 'Панорамные окна' in recorded['quote']
-                    assert 'если в приоритете панорамный вид.' in expected
-                    expected = expected.replace('если в приоритете панорамный вид.',
-                                                'если в приоритете панорамные окна.')
-                assert expected == explanation(original, request, recorded['quote'])
+                    assert 'если в приоритете панорамный вид.' in recorded['explanation']
+                lead = CONCISE_LEADS[(original.id, request.category)]
+                if original.id == 'HK-64395' and recorded['quote'].startswith('Nerima Terrace'):
+                    # The two real models selected different restaurant details.
+                    lead = 'Панорамный вид.'
+                assert explanation(original, request, recorded['quote']) == lead + source_suffix
+                assert len(lead) < len(recorded['explanation'].split(' В описании: ')[0])
                 assert recorded['source_exact'] and recorded['unique_source_in_result']

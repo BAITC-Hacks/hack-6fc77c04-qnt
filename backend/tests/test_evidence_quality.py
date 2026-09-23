@@ -84,6 +84,8 @@ def test_short_explanations_keep_optional_evidence(catalog, payload):
     assert len(set(c.explanation for c in result.cards)) == 3
     for card in result.cards:
         assert card.name not in card.explanation
-        assert "корпоратив" in card.explanation
+        # Shared eligibility stays in structured evidence; the short lead is
+        # reserved for this contractor's distinguishing source detail.
+        assert any(e.field == "event_formats" and "корпоратив" in e.value for e in card.evidence)
         fields = {e.field for e in card.evidence}
         assert {"busy_dates", "price_from_kzt", "languages", "max_hours", "description"} <= fields
