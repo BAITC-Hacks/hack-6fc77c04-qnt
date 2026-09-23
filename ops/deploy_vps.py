@@ -10,12 +10,14 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
+import tempfile
 
 from dotenv import dotenv_values
 
 ROOT = Path(__file__).resolve().parents[1]
 NAMESPACE = "hackalem-qnt"
 KANIKO = "gcr.io/kaniko-project/executor@sha256:4e7a52dd1f14872430652bb3b027405b8dfd17c4538751c620ac005741ef9698"
+SSH_SOCKET = None
 
 
 def git(*args):
@@ -26,6 +28,8 @@ def remote(host, command, data=None, capture=False):
     # Never echo data: release input contains a Kubernetes Secret patch.
     completed = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
                                 "-o", "StrictHostKeyChecking=yes", "-o", "UpdateHostKeys=no",
+                                "-o", "ControlMaster=auto", "-o", "ControlPersist=30",
+                                "-o", "ControlPath=" + str(SSH_SOCKET),
                                 host, command], input=data, stdout=subprocess.PIPE if capture else None,
                                check=True)
     return completed.stdout
@@ -113,7 +117,14 @@ if __name__ == "__main__":
     if args.host.startswith("-") or not re.fullmatch(r"[a-zA-Z0-9_.@:-]+", args.host):
         raise SystemExit("Invalid SSH destination")
     revision = git("rev-parse", "--verify", args.revision + "^{commit}").decode().strip()
-    if args.action == "build":
-        build(args.host, revision)
-    else:
-        release(args.host, revision, args.enable_ai)
+    # One authenticated transport for all steps avoids bursts of SSH handshakes.
+    with tempfile.TemporaryDirectory(prefix="qnt-deploy-ssh-") as socket_dir:
+        SSH_SOCKET = str(Path(socket_dir) / "master")
+        try:
+            if args.action == "build":
+                build(args.host, revision)
+            else:
+                release(args.host, revision, args.enable_ai)
+        finally:
+            subprocess.run(["ssh", "-S", SSH_SOCKET, "-O", "exit", args.host],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
