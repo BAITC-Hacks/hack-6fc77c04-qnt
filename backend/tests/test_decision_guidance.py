@@ -34,6 +34,34 @@ def test_panorama_does_not_promise_a_terrace(payload):
     assert 'террас' not in text and 'открыт' not in text
 
 
+def test_catalog_windows_do_not_promise_a_view(catalog, payload):
+    request = MatchRequest(**{**payload, 'category': 'Банкетный зал', 'event_format': 'свадьба'})
+    contractor = next(c for c in catalog.contractors if c.id == 'HK-90011')
+    quote = local_snippet(contractor, request)
+    assert 'Панорамные окна' in quote
+    assert decision_lens(request, quote) == 'панорамные окна'
+    text = explanation_text(request, quote)
+    assert 'если в приоритете панорамные окна.' in text
+    assert 'панорамный вид' not in text
+    assert quote.rstrip('.!? ') in text
+
+
+@pytest.mark.parametrize('quote', [
+    'Панорамная локация с видом на город и горы.',
+    'Панорамные окна с видом на горы.',
+    'Из зала открывается панорамный вид.',
+])
+def test_explicit_view_remains_a_buying_reason(payload, quote):
+    request = MatchRequest(**{**payload, 'category': 'Банкетный зал'})
+    assert decision_lens(request, quote) == 'панорамный вид'
+
+
+@pytest.mark.parametrize('quote', ['Панорамная локация для мероприятий.', 'Панорамное видео на экранах.'])
+def test_panorama_adjective_alone_does_not_establish_a_view(payload, quote):
+    request = MatchRequest(**{**payload, 'category': 'Банкетный зал'})
+    assert decision_lens(request, quote) is None
+
+
 def test_sparse_source_is_not_upgraded_to_a_guarantee(payload):
     request = MatchRequest(**{**payload, 'category': 'Фотограф', 'event_format': 'свадьба'})
     assert decision_lens(request, 'Эстетика, атмосфера, детали — это все про меня.') is None

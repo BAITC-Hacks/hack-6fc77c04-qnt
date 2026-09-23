@@ -4,13 +4,16 @@ import { demo, getOptions, match } from './api';
 import { examples } from './demo';
 import type { Options, Match, Request, Card } from './types';
 import './style.css';
+import { useScreenTransition } from './useScreenTransition';
 import { ContractorCard, ResultSummary } from './ResultDetails';
 import { EstimatePanel } from './EstimatePanel';
 import { EstimateDialog } from './EstimateDialog';
 import { ResultsFooter } from './ResultsFooter';
 import { addEstimateItem, replaceEstimateItem, removeEstimateItem, readEstimate, saveEstimate } from './estimate';
 import type { EstimateItem } from './estimate';
+import './mobile.css';
 function App() {
+ const { screen, transition, cancelTransition } = useScreenTransition();
  const [options, setOptions] = useState<Options>();
  const [optionsError, setOptionsError] = useState('');
  const [reload, setReload] = useState(0);
@@ -25,8 +28,10 @@ function App() {
  const [estimateOpen, setEstimateOpen] = useState(false);
  const [error, setError] = useState('');
  const [loading, setLoading] = useState(false);
+ const [compact, setCompact] = useState(false);
  const active = useRef<AbortController | null>(null);
  const sequence = useRef(0);
+ const resultHeader = useRef<HTMLDivElement>(null);
  const outcome = useRef<HTMLHeadingElement>(null);
  const firstField = useRef<HTMLSelectElement>(null);
  useEffect(() => {
@@ -36,17 +41,46 @@ function App() {
   return () => controller.abort();
  }, [reload]);
  useEffect(() => () => active.current?.abort(), []);
+ useEffect(() => {
+  if (!compact || !resultHeader.current) return;
+  const root = document.documentElement;
+  const previous = root.style.scrollPaddingTop;
+  const previousHeaderHeight = root.style.getPropertyValue('--results-header-height');
+  const observer = new ResizeObserver(([entry]) => {
+   const height = entry.target.getBoundingClientRect().height;
+   root.style.scrollPaddingTop = `${height + 16}px`;
+   root.style.setProperty('--results-header-height', `${height}px`);
+  });
+  observer.observe(resultHeader.current);
+  return () => { observer.disconnect(); root.style.scrollPaddingTop = previous; root.style.setProperty('--results-header-height', previousHeaderHeight); };
+ }, [compact]);
+ function revealForm(update = () => {}) {
+  const focusForm = () => {
+   firstField.current?.focus({ preventScroll: true });
+   firstField.current?.scrollIntoView({ block: 'center', behavior: 'instant' });
+  };
+  if (!compact) { update(); window.requestAnimationFrame(focusForm); return; }
+  void transition(() => { setCompact(false); update(); }, focusForm);
+ }
+ function editConditions() { revealForm(); }
+ function showResults() {
+  const focusResults = () => { outcome.current?.focus({preventScroll:true}); outcome.current?.scrollIntoView({block:'start',behavior:'instant'}); };
+  if (!result) { focusResults(); return; }
+  void transition(() => setCompact(true), () => { outcome.current?.focus({preventScroll:true}); window.scrollTo({top:0,behavior:'instant'}); }, () => Boolean(result));
+ }
  useEffect(() => { setStorageAvailable(demo || saveEstimate(estimate)); }, [estimate]);
  useEffect(() => { if (!estimateNotice || estimateOpen) return; const timer = window.setTimeout(() => setEstimateNotice(''), 6000); return () => window.clearTimeout(timer); }, [estimateNotice, estimateOpen]);
  function closeEstimate() { setEstimateOpen(false); setEstimateNotice(''); }
- function clear() { sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setResultRequest(undefined); setPendingSelection(undefined); setError(''); }
+ function clear() { cancelTransition(); sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setResultRequest(undefined); setPendingSelection(undefined); setError(''); }
  function update(key: keyof typeof form, value: string) { clear(); if (['city', 'date', 'event_format', 'category'].includes(key)) { setReplacingId(undefined); setEstimateNotice(''); } setForm(f => ({ ...f, [key]: value })); }
- function example(request: Request) { clear(); setReplacingId(undefined); setForm({ ...request, budget_kzt: String(request.budget_kzt), language: request.language ?? '', duration_hours: request.duration_hours === null ? '' : String(request.duration_hours) }); firstField.current?.focus(); }
+ function applyExample(request: Request) {
+  clear(); setReplacingId(undefined);
+  setForm({ ...request, budget_kzt: String(request.budget_kzt), language: request.language ?? '', duration_hours: request.duration_hours === null ? '' : String(request.duration_hours) });
+ }
+ function example(request: Request) { revealForm(() => applyExample(request)); }
  function replaceFromEstimate(item: EstimateItem) {
   closeEstimate();
-  example(item.request);
-  setReplacingId(item.contractor.id);
-  window.requestAnimationFrame(() => { firstField.current?.focus({preventScroll:true}); firstField.current?.scrollIntoView({block:'center'}); });
+  revealForm(() => { applyExample(item.request); setReplacingId(item.contractor.id); });
  }
  function choose(card: Card) {
   if (!resultRequest) return;
@@ -83,15 +117,42 @@ function App() {
   if (!Number.isSafeInteger(budget) || budget <= 0 || (hours !== null && (!Number.isFinite(hours) || hours <= 0)) || form.date < options.date_min || form.date > options.date_max || !options.cities.includes(form.city) || !options.categories.includes(form.category) || !options.event_formats.includes(form.event_format) || (form.language && !options.languages.includes(form.language))) { setError('Проверьте значения: бюджет — положительное целое число, часы — больше нуля, дата — в пределах календаря.'); return; }
   const controller = new AbortController(); active.current = controller; const version = ++sequence.current; setLoading(true);
   const request: Request = { ...form, budget_kzt: budget, language: form.language || null, duration_hours: hours };
-  try { const data = await match(request, controller.signal); if (sequence.current === version) { setResult(data); setResultRequest(request); } }
+  try {
+   const data = await match(request, controller.signal);
+   if (sequence.current === version) await transition(
+    () => { setResult(data); setResultRequest(request); setCompact(true); setLoading(false); },
+    () => { outcome.current?.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' }); },
+    () => sequence.current === version && !controller.signal.aborted,
+   );
+  }
   catch (e) { if (sequence.current === version && !controller.signal.aborted) setError(e instanceof Error ? e.message : 'Не удалось выполнить запрос.'); }
   finally { if (sequence.current === version) setLoading(false); }
  }
  return <>
   {demo && <div className="demo" role="note">Демонстрационные ответы интерфейса <span>· Вымышленные примеры, без сервера и AI</span></div>}
-  <main><div className="hero"><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a><span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span><button className="estimate-nav" type="button" aria-haspopup="dialog" onClick={() => { setEstimateNotice(''); setEstimateOpen(true); }}>Посмотреть смету <span className="estimate-count">{estimate.length}</span></button></header>
-  <div className="hero-content"><div className="intro"><div className="intro-copy"><p className="eyebrow">ВАШЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Нужные люди.<br/><span>Под ваше событие.</span></h1><p>Задайте условия — получите до трёх подрядчиков<br className="desktop"/> с понятным объяснением каждого выбора.</p></div><div className="benefits"><div><span aria-hidden="true">♧</span>Проверяем<br/>по вашим условиям</div><div><span aria-hidden="true">≡</span>Объясняем<br/>каждый выбор</div><div><span aria-hidden="true">◇</span>До трёх<br/>вариантов</div></div></div>
-  <section className="panel" aria-labelledby="form-title"><div className="section-title"><h2 id="form-title">Ваше событие</h2></div>
+  <main ref={screen} className={compact ? 'has-results' : undefined}><div className="hero" ref={resultHeader}><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a>{compact ? <button className="edit-conditions" onClick={editConditions} aria-controls="event-form" aria-expanded={false}>Изменить условия <span aria-hidden="true">↗</span></button> : <span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span>}<button className="estimate-nav" type="button" aria-haspopup="dialog" aria-label={`Посмотреть смету ${estimate.length}`} onClick={() => { setEstimateNotice(''); setEstimateOpen(true); }}>{compact ? 'Смета' : 'Посмотреть смету'} <span className="estimate-count">{estimate.length}</span></button></header>
+  {compact && <section className="conditions" aria-labelledby="conditions-title">
+   <h1 id="conditions-title" className="sr-only">Условия вашего события</h1>
+   <div className="conditions-glance">
+    <span>{form.city} <span aria-hidden="true">·</span> {form.date.split('-').reverse().join('.')}<span className="glance-category"> <span aria-hidden="true">·</span> {form.category}</span></span>
+    <details className="conditions-mobile"><summary>Все условия</summary>
+     <dl className="conditions-menu">
+      <div><dt>Город</dt><dd>{form.city}</dd></div><div><dt>Дата</dt><dd>{form.date.split('-').reverse().join('.')}</dd></div>
+      <div><dt>Формат</dt><dd>{form.event_format}</dd></div><div><dt>Категория</dt><dd>{form.category}</dd></div>
+      <div><dt>Бюджет на одного</dt><dd>до {new Intl.NumberFormat('ru-RU').format(Number(form.budget_kzt))} ₸</dd></div>
+      <div><dt>Язык</dt><dd>{form.language || 'Без ограничения'}</dd></div><div><dt>Длительность</dt><dd>{form.duration_hours ? `${form.duration_hours} ч` : 'Без ограничения'}</dd></div>
+     </dl>
+    </details>
+   </div>
+   <dl className="conditions-list conditions-desktop">
+    <div><dt>Город</dt><dd>{form.city}</dd></div><div><dt>Дата</dt><dd>{form.date.split('-').reverse().join('.')}</dd></div>
+    <div><dt>Формат</dt><dd>{form.event_format}</dd></div><div><dt>Категория</dt><dd>{form.category}</dd></div>
+    <div><dt>Бюджет на одного</dt><dd>до {new Intl.NumberFormat('ru-RU').format(Number(form.budget_kzt))} ₸</dd></div>
+    <div><dt>Язык</dt><dd>{form.language || 'Без ограничения'}</dd></div><div><dt>Длительность</dt><dd>{form.duration_hours ? `${form.duration_hours} ч` : 'Без ограничения'}</dd></div>
+   </dl>
+  </section>}
+  <div className="hero-content" hidden={compact}><div className="intro"><div className="intro-copy"><p className="eyebrow">ВАШЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Нужные люди.<br/><span>Под ваше событие.</span></h1><p>Задайте условия — получите до трёх подрядчиков<br className="desktop"/> с понятным объяснением каждого выбора.</p></div><div className="benefits"><div><span aria-hidden="true">♧</span>Проверяем<br/>по вашим условиям</div><div><span aria-hidden="true">≡</span>Объясняем<br/>каждый выбор</div><div><span aria-hidden="true">◇</span>До трёх<br/>вариантов</div></div></div>
+  <section id="event-form" className="panel" aria-labelledby="form-title"><div className="section-title"><h2 id="form-title">Ваше событие</h2></div>
   {!options && !optionsError && <p role="status">Загружаем справочники…</p>}
   {optionsError && <div role="alert" className="error"><p>{optionsError}</p><button onClick={() => setReload(r => r + 1)}>Повторить загрузку</button></div>}
   {options && <form onSubmit={submit}>{replacingId && <div className="replacement-note" role="status"><p>Подбираем замену для «{estimate.find(item => item.contractor.id === replacingId)?.contractor.name}». Старая позиция останется до выбора новой.</p><button type="button" onClick={() => { setReplacingId(undefined); setEstimateNotice('Замена отменена. Смета сохранена.'); }}>Отменить замену</button></div>}<div className="fields">
@@ -102,15 +163,15 @@ function App() {
    <label className="wide" htmlFor="budget">Бюджет на одного подрядчика, ₸<input id="budget" type="number" inputMode="numeric" required min="1" step="1" value={form.budget_kzt} onChange={e => update('budget_kzt', e.target.value)}/><small>За мероприятие. Цена в карточке указана «от».</small></label>
    <label htmlFor="language">Язык <small>необязательно</small><select id="language" value={form.language} onChange={e => update('language', e.target.value)}><option value="">Без ограничения</option>{options.languages.map(v => <option key={v}>{v}</option>)}</select></label>
    <label htmlFor="hours">Часы <small>необязательно</small><input id="hours" type="number" min="0.01" step="any" placeholder="Без ограничения" value={form.duration_hours} onChange={e => update('duration_hours', e.target.value)}/></label>
-  </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button><div className="search-feedback" role="status" aria-atomic="true">{loading ? 'Проверяем условия. Ожидание — до 12 секунд…' : error ? 'Не удалось выполнить подбор.' : result ? (result.returned_count ? `Подбор готов: ${result.returned_count} варианта.` : 'Подбор завершён: совпадений нет.') : ''}</div>{(result || error) && <button className="outcome-link" type="button" onClick={() => { outcome.current?.focus({ preventScroll: true }); outcome.current?.scrollIntoView({ block: 'start' }); }}>{error ? 'Перейти к ошибке' : 'Посмотреть результат'} ↓</button>}</form>}
+  </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button><div className="search-feedback" role="status" aria-atomic="true">{loading ? 'Проверяем условия. Ожидание — до 12 секунд…' : error ? 'Не удалось выполнить подбор.' : result ? (result.returned_count ? `Подбор готов: ${result.returned_count} ${result.returned_count === 1 ? 'вариант' : 'варианта'}.` : 'Подбор завершён: совпадений нет.') : ''}</div>{(result || error) && <button className="outcome-link" type="button" onClick={showResults}>{error ? 'Перейти к ошибке' : 'Посмотреть результат'} ↓</button>}</form>}
   <div className="examples"><p>Попробуйте готовый пример</p><div>{examples.map(e => <button key={e.title} disabled={!options} onClick={() => example(e.request)}>{e.title}</button>)}</div><small>Пример заполняет форму. Нажмите кнопку подбора.</small></div></section></div></div>
-  <div className="content"><section className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step">02</span><h2 id="results-title" ref={outcome} tabIndex={-1}>Ваш подбор<span className="title-dot">.</span></h2></div>
+  <div className="content"><section hidden={!compact && !loading && !error} className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step" aria-hidden="true">✳</span><h2 id="results-title" ref={outcome} tabIndex={-1}>Ваш подбор<span className="title-dot">.</span></h2>{compact && result && <span className="result-total">Показано: {result.returned_count}</span>}</div>
   <div>{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <ResultSummary result={result} date={form.date}/>}</div>
   {error && <div className="error" role="alert">{error}<p>Параметры сохранены. Повторите подбор.</p></div>}
   {!result && !loading && !error && <div className="empty"><p className="eyebrow">ЛЮДИ / ИДЕИ / СОБЫТИЯ</p><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
   {Boolean(result?.cards.length) && <p className="explanation-note">Соответствие условиям проверяет программный код. AI может выбрать цитату для объяснения; local — объяснение без AI.</p>}
   {result?.cards.map((card, index) => <ContractorCard key={card.id} card={card} index={index} selected={estimate.some(item => item.contractor.id === card.id && item.request.city === resultRequest?.city && item.request.date === resultRequest?.date && item.request.event_format === resultRequest?.event_format)} selectingReplacement={Boolean(replacingId)} onSelect={() => choose(card)}/>)}
-  {result?.returned_count === 0 && <button onClick={() => firstField.current?.focus()}>Изменить условия ↑</button>}
+  {result?.returned_count === 0 && <button onClick={editConditions}>Изменить условия ↑</button>}
   {result && <ResultsFooter result={result}/>}
   </section>
   <footer className="site-footer"><div className="footer-identity"><a className="footer-brand" href="./">QNT <span>/ Firebird</span></a><p>Нужные люди. Осознанный выбор.</p><span>HackAlem AI · 2026</span></div><div className="footer-team"><p className="footer-label">Сделано командой QNT</p><a href="https://github.com/Adventkz" target="_blank" rel="noreferrer">Естай <span>Подбор, AI и сервер ↗</span></a><a href="https://github.com/AbaevnaBeka" target="_blank" rel="noreferrer">Бекзат <span>Дизайн и интерфейс ↗</span></a></div><div className="footer-source"><p className="footer-label">О проекте</p><p>Учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны отдельные вымышленные примеры.'}</p><p>Цены указаны «от». Подбор и смета не являются бронированием.</p><a href="https://github.com/BAITC-Hacks/hack-6fc77c04-qnt" target="_blank" rel="noreferrer">Код и принципы подбора ↗</a></div></footer></div></main>

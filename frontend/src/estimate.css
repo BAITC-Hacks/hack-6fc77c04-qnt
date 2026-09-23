@@ -38,7 +38,7 @@
 .estimate-download{background:var(--ink);color:#fff;border-color:var(--ink)}
 .estimate-download:hover{background:#463a2d}
 .estimate-count{display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:23px;margin-left:8px;padding:0 5px;border-radius:50px;background:#e5d5c3;color:#4b3423;font-size:11px;font-weight:700}
-.estimate-toast{position:fixed;right:24px;top:16px;z-index:5;max-width:min(380px,calc(100% - 32px));padding:15px 20px;background:#fcf9f4;color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;box-shadow:0 8px 40px #20160d26;font-size:13px;line-height:1.5;pointer-events:none}
+.estimate-toast{position:fixed;right:24px;top:calc(var(--results-header-height,0px) + 16px);z-index:30;max-width:min(380px,calc(100% - 32px));padding:15px 20px;background:#fcf9f4;color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;box-shadow:0 8px 40px #20160d26;font-size:13px;line-height:1.5;pointer-events:none}
 .site-footer{display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:40px;margin-top:40px;padding:30px 0 12px;font-size:12px;line-height:1.65}
 .site-footer p{margin:8px 0}
 .footer-brand{font:28px Georgia,serif;text-decoration:none;color:var(--ink)}

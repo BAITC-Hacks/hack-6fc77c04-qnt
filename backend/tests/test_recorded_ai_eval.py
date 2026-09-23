@@ -24,5 +24,13 @@ def test_published_ai_trials_are_replayable_source_evidence(catalog):
             for recorded, original in zip(case['cards'], selected):
                 assert recorded['mode'] == 'ai'
                 assert recorded['quote'] in relevant_snippets(original, request)
-                assert recorded['explanation'] == explanation(original, request, recorded['quote'])
+                expected = recorded['explanation']
+                if original.id == 'HK-90011':
+                    # Preserve the real trial verbatim. Its formatter predated the
+                    # windows/view correction; the model's selected quote is unchanged.
+                    assert 'Панорамные окна' in recorded['quote']
+                    assert 'если в приоритете панорамный вид.' in expected
+                    expected = expected.replace('если в приоритете панорамный вид.',
+                                                'если в приоритете панорамные окна.')
+                assert expected == explanation(original, request, recorded['quote'])
                 assert recorded['source_exact'] and recorded['unique_source_in_result']
