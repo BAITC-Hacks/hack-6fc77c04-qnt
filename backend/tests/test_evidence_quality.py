@@ -2,7 +2,7 @@ from dataclasses import replace
 
 import pytest
 
-from app.matching import local_snippet, match, snippets
+from app.matching import local_snippet, match, snippets, relevant_snippets
 from app.models import MatchRequest
 
 
@@ -53,3 +53,37 @@ def test_photographer_details_are_not_just_category_or_greeting(catalog):
 def test_catalog_evidence_refinement_does_not_change_demo_ranking(catalog, payload):
     result, _ = match(MatchRequest(**payload), catalog)
     assert [card.id for card in result.cards] == ["HK-88430", "HK-29829", "HK-27222"]
+
+
+def test_event_specialization_beats_unrelated_detail_density(catalog, payload):
+    c = replace(catalog.contractors[0], description=(
+        "Музыка, театр, танцы, гитара, вокал и саксофон. "
+        "Специализируюсь на корпоративных мероприятиях и деловых встречах."
+    ))
+    assert local_snippet(c, MatchRequest(**payload)) == "Специализируюсь на корпоративных мероприятиях и деловых встречах."
+
+
+def test_photographer_aside_is_not_wedding_specialization(catalog):
+    c = next(c for c in catalog.contractors if c.id == "HK-30583")
+    r = MatchRequest(city="Алматы", category="Фотограф", date="2026-10-10", event_format="свадьба", budget_kzt=10000000)
+    quote = local_snippet(c, r)
+    assert quote in c.description
+    assert "Помимо свадеб" not in quote
+    assert len(quote) < 150
+    assert all("Помимо свадеб" not in s for s in relevant_snippets(c, r))
+
+
+def test_aside_filter_keeps_evidence_when_no_alternative(catalog, payload):
+    c = replace(catalog.contractors[0], description="Помимо корпоративов провожу музыкальные концерты.")
+    assert relevant_snippets(c, MatchRequest(**payload)) == [c.description]
+
+
+def test_short_explanations_keep_optional_evidence(catalog, payload):
+    result, _ = match(MatchRequest(**payload), catalog)
+    assert max(len(c.explanation) for c in result.cards) < 260
+    assert len(set(c.explanation for c in result.cards)) == 3
+    for card in result.cards:
+        assert card.name not in card.explanation
+        assert "корпоратив" in card.explanation
+        fields = {e.field for e in card.evidence}
+        assert {"busy_dates", "price_from_kzt", "languages", "max_hours", "description"} <= fields

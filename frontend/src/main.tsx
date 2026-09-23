@@ -4,13 +4,8 @@ import { demo, getOptions, match } from './api';
 import { examples } from './demo';
 import type { Options, Match, Request, Reason } from './types';
 import './style.css';
-const money = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
+import { ContractorCard, ResultSummary } from './ResultDetails';
 const reasons: Record<Reason, string> = { busy: 'Заняты в эту дату', format: 'Другой формат', budget: 'Выше бюджета', language: 'Не подходит язык', duration: 'Не подходит длительность' };
-const evidenceLabels: Record<string, string> = {
- price_from_kzt: 'Цена от', event_formats: 'Формат мероприятия',
- busy_dates: 'Занятость на выбранную дату', ranking: 'Основание порядка выдачи',
- languages: 'Языки', max_hours: 'Лимит часов', description: 'Цитата из описания',
-};
 function App() {
  const [options, setOptions] = useState<Options>();
  const [optionsError, setOptionsError] = useState('');
@@ -61,11 +56,11 @@ function App() {
   </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button><div className="search-feedback" role="status" aria-atomic="true">{loading ? 'Проверяем условия. Ожидание — до 12 секунд…' : error ? 'Не удалось выполнить подбор.' : result ? (result.returned_count ? `Подбор готов: ${result.returned_count} варианта.` : 'Подбор завершён: совпадений нет.') : ''}</div>{(result || error) && <button className="outcome-link" type="button" onClick={() => { outcome.current?.focus({ preventScroll: true }); outcome.current?.scrollIntoView({ block: 'start' }); }}>{error ? 'Перейти к ошибке' : 'Посмотреть результат'} ↓</button>}</form>}
   <div className="examples"><p>Попробуйте готовый пример</p><div>{examples.map(e => <button key={e.title} disabled={!options} onClick={() => example(e.request)}>{e.title}</button>)}</div><small>Пример заполняет форму. Нажмите кнопку подбора.</small></div></section>
   <section className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step">02</span><h2 id="results-title" ref={outcome} tabIndex={-1}>Ваш подбор<span className="title-dot">.</span></h2></div>
-  <div>{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <div className="summary"><p className="eyebrow">{result.status === 'matches_found' ? `НАЙДЕНО: ${result.eligible_count} · ПОКАЗАНО: ${result.returned_count}` : result.status === 'category_missing' ? 'КАТЕГОРИИ НЕТ В ЭТОМ ГОРОДЕ' : 'НЕТ СОВПАДЕНИЙ ПО УСЛОВИЯМ'}</p><p>{result.message}</p></div>}</div>
+  <div>{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <ResultSummary result={result} date={form.date}/>}</div>
   {error && <div className="error" role="alert">{error}<p>Параметры сохранены. Повторите подбор.</p></div>}
   {!result && !loading && !error && <div className="empty"><p className="eyebrow">ЛЮДИ / ИДЕИ / СОБЫТИЯ</p><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
   {Boolean(result?.cards.length) && <p className="explanation-note">Соответствие условиям проверяет программный код. AI может выбрать цитату для объяснения; local — объяснение без AI.</p>}
-  {result?.cards.map((card, index) => <article className="card" key={card.id}><div className="card-index" aria-hidden="true">0{index + 1}<span> / ПОДБОР</span></div><div className="card-body"><div className="card-top"><div><p className="meta">{card.category} · {card.city}</p><h3>{card.name}</h3></div><strong className="price">от {money(card.price_from_kzt)} ₸</strong></div><p>{card.explanation}</p><div className="pills"><span>{card.explanation_mode === 'ai' ? 'AI · выбор цитаты' : 'local · локальное объяснение'}</span>{card.flags.synthetic && <span>synthetic · синтетический профиль</span>}{card.flags.city_imputed && <span>city_imputed · город дополнен</span>}{card.flags.price_imputed && <span>price_imputed · цена дополнена</span>}</div><details><summary>Факты-основания</summary><dl><dt>Языки</dt><dd>{card.languages.join(', ') || 'Не указаны'}</dd><dt>Лимит часов</dt><dd>{card.max_hours ?? 'Ограничение неприменимо'}</dd>{card.evidence.map((e, i) => <div key={i}><dt>{evidenceLabels[e.field] ?? e.field}</dt><dd>{e.value}</dd></div>)}</dl></details></div></article>)}
+  {result?.cards.map((card, index) => <ContractorCard key={card.id} card={card} index={index}/>)}
   {result && <><details className="filters"><summary>Как условия повлияли на подбор</summary><p>В городе и категории: {result.total_in_category}. Последовательные фильтры: каждый исключённый кандидат учитывается только по первой причине.</p><ul>{result.rejections.map(r => <li key={r.code}>{reasons[r.code]} <strong>{r.count}</strong></li>)}</ul></details>{result.returned_count === 0 && <button onClick={() => firstField.current?.focus()}>Изменить условия ↑</button>}</>}
   </section></div><footer>Источник: учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны только отдельные вымышленные фикстуры.'} Подбор не является бронированием.</footer></main>
  </>;

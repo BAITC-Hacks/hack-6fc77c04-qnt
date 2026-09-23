@@ -42,8 +42,10 @@ mkdirSync(screenshots, { recursive: true });
    assert(await page.locator('.card details').first().getAttribute('open') !== null);
    assert((await facts.boundingBox()).height >= 44);
    assert(!(await page.locator('.card dt').allTextContents()).includes('price_from_kzt'));
-   const values = await page.locator('.card').first().locator('dd').allTextContents();
-   for (const fact of data.cards[0].evidence) assert(values.includes(fact.value));
+   for (const fact of data.cards[0].evidence) {
+    if (['price_from_kzt', 'busy_dates', 'max_hours'].includes(fact.field)) continue; // Formatting covered by ResultDetails tests.
+    assert((await page.locator('.card').first().textContent()).includes(fact.value));
+   }
    await fits();
    assert(await page.locator('input,select').evaluateAll(els => els.every(e => e.labels.length && getComputedStyle(e).fontSize === '16px')));
    if (width === 1440 || width === 390) {
@@ -87,7 +89,7 @@ mkdirSync(screenshots, { recursive: true });
   await page.route('**/api/match', route => route.fulfill({ json: marked }));
   await page.setViewportSize({ width: 320, height: 900 });
   await search(); await fits();
-  for (const flag of ['AI · выбор цитаты', 'synthetic', 'city_imputed', 'price_imputed']) assert((await page.locator('.card').first().textContent()).includes(flag));
+  for (const flag of ['AI выбрал факт', 'Синтетический профиль', 'Город дополнен в каталоге', 'Цена дополнена в каталоге']) assert((await page.locator('.card').first().textContent()).includes(flag));
   assert.deepEqual(errors, []);
   console.log('PASS injected two cards, AI/flags, long text at 320px; no JS errors');
  } finally { await browser.close(); }
