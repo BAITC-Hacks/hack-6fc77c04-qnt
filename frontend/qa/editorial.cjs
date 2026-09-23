@@ -36,7 +36,7 @@ mkdirSync(screenshots, { recursive: true });
    await page.setViewportSize({ width, height: 900 });
    await page.goto(base);
    await page.locator('#city option').first().waitFor({ state: 'attached' });
-   assert.equal(await page.locator('.content').isVisible(), false);
+   assert.equal(await page.locator('.results').isVisible(), false);
    if (width === 1440) await page.screenshot({ path: join(screenshots, 'before-search-1440.png'), fullPage: true });
    assert.equal(await page.locator('.demo').count(), 0);
    const data = await search();

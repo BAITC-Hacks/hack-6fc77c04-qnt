@@ -178,3 +178,9 @@ h1{font-size:39px}
 .has-results .card,.has-results summary{scroll-margin-top:16px}
 @media(max-width:760px){.has-results header{padding:10px 20px}.has-results .brand{font-size:23px;gap:8px}.has-results .brand-case{font-size:9px;padding-left:9px}.has-results .mark{font-size:28px}.has-results .hero{padding-bottom:10px}.has-results .conditions{padding:0 20px}.has-results .conditions-list{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:14px;padding:4px 0 9px;scrollbar-width:thin;scrollbar-color:#a58b70 #211b15}.has-results .conditions-list>div{flex:0 0 auto;max-width:220px;padding-left:14px}.has-results .conditions-list dd{font-size:12px}.has-results .content{padding-top:28px}.has-results .results h2{font-size:37px;letter-spacing:-1px}.has-results .results>.section-title{gap:10px;flex-wrap:wrap}.has-results .results>.section-title .step{font-size:25px}.result-total{padding:5px 9px;font-size:10px}.has-results .edit-conditions{font-size:11px;gap:8px;padding:8px 10px}}
 @media(max-width:360px){.has-results header{padding-left:16px;padding-right:16px}.has-results .brand-case{display:none}.has-results .conditions{padding-left:16px;padding-right:16px}.has-results .results h2{font-size:32px}.result-total{margin-left:0}}
+
+.has-results header{gap:12px}
+.has-results .brand{margin-right:auto}
+.has-results .estimate-nav{flex-shrink:0;font-size:12px}
+@media(max-width:760px){.has-results .brand-case{display:none}.has-results header{gap:8px}.has-results .estimate-nav{padding:8px;font-size:11px}.has-results .edit-conditions{padding:8px;gap:5px}.has-results .estimate-nav{margin:0}}
+@media(max-width:400px){.has-results .brand .mark{display:none}}

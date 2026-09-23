@@ -1,0 +1,44 @@
+{
+  "automated_pass": true,
+  "paid_requests": 0,
+  "checks": [
+    {
+      "check": "frontend_tests",
+      "pass": true,
+      "exit_code": 0
+    },
+    {
+      "check": "production_build",
+      "pass": true,
+      "exit_code": 0
+    },
+    {
+      "check": "backend_tests",
+      "pass": true,
+      "exit_code": 0
+    },
+    {
+      "check": "three_outcomes_and_date_change",
+      "pass": true,
+      "exit_code": 0
+    },
+    {
+      "check": "all_100_days",
+      "pass": true,
+      "exit_code": 0
+    },
+    {
+      "check": "offline_explanation_rubric",
+      "pass": true,
+      "exit_code": 0
+    }
+  ],
+  "not_automatically_verifiable": [
+    "Official platform submission and receipt",
+    "In-person attendance/check-in/breaks",
+    "Authentic personal contribution beyond Git evidence",
+    "Organizer final score and relative ranking",
+    "Public demo deployed at the final submitted revision"
+  ],
+  "scope": "Reproducible internal acceptance against Firebird requirements, not official certification or a predicted jury score."
+}

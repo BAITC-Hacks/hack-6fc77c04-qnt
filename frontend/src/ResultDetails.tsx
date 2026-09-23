@@ -25,12 +25,12 @@ export function ResultSummary({ result, date }: { result: Match; date: string })
   </dl>
   {result.status === 'category_missing' ? <p>Выберите другой город или категорию — в этом разделе каталога пока нет профилей.</p> : <>
    {result.eligible_count < 3 && <p>{result.eligible_count > 0 ? 'Показаны все подходящие варианты.' : 'Ни один профиль не прошёл все условия.'} {result.rejections.some(r => r.count > 0) ? 'Причины отсева — под результатами; можно изменить условия и повторить подбор.' : 'В каталоге мало профилей этой категории.'}</p>}
-   <p className="calendar-note">Дата: {displayDate} · проверена по учебному календарю.<br/>{' '}Доступность и бронь нужно подтвердить у подрядчика.</p>
+   <p className="calendar-note">Исключено по занятости: {result.rejections.find(r => r.code === 'busy')?.count ?? 0}. Смена даты может изменить подбор.<br/>Дата: {displayDate} · проверена по учебному календарю.<br/>Доступность и бронь нужно подтвердить у подрядчика.</p>
   </>}
  </div>;
 }
 
-export function ContractorCard({ card, index = 0 }: { card: Card; index?: number }) {
+export function ContractorCard({ card, index = 0, selected = false, selectingReplacement = false, onSelect }: { card: Card; index?: number; selected?: boolean; selectingReplacement?: boolean; onSelect?: () => void }) {
  const marker = ' В описании: ';
  const split = card.explanation.indexOf(marker);
  const quote = card.evidence.find(e => e.field === 'description')?.value;
@@ -51,5 +51,6 @@ export function ContractorCard({ card, index = 0 }: { card: Card; index?: number
    {!facts.some(e => e.field === 'max_hours') && <div><dt>Продолжительность работы</dt><dd>{card.max_hours === null ? 'Не ограничена часами присутствия' : `${money(card.max_hours)} ч`}</dd></div>}
    {facts.map((e, i) => <div key={i}><dt>{labels[e.field] ?? 'Дополнительный факт'}</dt><dd>{evidenceValue(e.field, e.value)}</dd></div>)}
   </dl></details>
+  {onSelect && <div className="card-actions"><button type="button" className="select-contractor" disabled={selected} onClick={onSelect} aria-label={selected ? `${card.name} уже в смете` : selectingReplacement ? `Заменить на ${card.name}` : `Добавить ${card.name} в смету`}>{selected ? 'В смете ✓' : selectingReplacement ? 'Выбрать на замену' : 'Выбрать в смету'}</button></div>}
  </div></article>;
 }
