@@ -1,7 +1,0 @@
-node_modules
-dist
-.qa-venv
-.qa
-test-results
-playwright-report
-package-lock.json
