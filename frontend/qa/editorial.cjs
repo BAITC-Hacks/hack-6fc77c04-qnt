@@ -32,7 +32,7 @@ mkdirSync(screenshots, { recursive: true });
    const response = page.waitForResponse(r => r.url().endsWith('/api/match'));
    await submit();
    const data = await (await response).json();
-   await page.locator('.summary').waitFor();
+   await page.locator('.summary').waitFor({ state: 'attached' });
    await settle();
    assert.equal(await page.locator('.card').count(), data.returned_count);
    assert.deepEqual(await page.locator('.card h3').allTextContents(), data.cards.map(c => c.name));
@@ -73,11 +73,23 @@ mkdirSync(screenshots, { recursive: true });
    if (width <= 760) {
     assert(await page.locator('.choice-reason > p').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 16), 'mobile explanation text');
     assert(await page.locator('.explanation-badge').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 13), 'mode label readable');
-    assert(await page.locator('.conditions-list dd').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 14), 'conditions readable');
+    assert(await page.locator('.conditions-glance > span').evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 14), 'glance readable');
     assert(stickyHeader.height < 150, 'mobile header leaves room for results');
-    await page.locator('.conditions-list').focus();
-    await page.locator('.conditions-list').evaluate(el => { el.scrollLeft = el.scrollWidth; });
-    assert(await page.locator('.conditions-list').evaluate(el => el.scrollLeft > 0), 'all mobile conditions remain reachable');
+    assert.equal(await page.locator('.conditions-glance').evaluate(el => el.scrollWidth <= el.clientWidth), true, 'no horizontal condition scrolling');
+    if (width <= 390) {
+     assert((await page.locator('.card').first().boundingBox()).y < 844, 'first answer appears in initial phone viewport');
+    }
+    const allConditions = page.locator('.conditions-mobile summary');
+    await allConditions.focus(); await page.keyboard.press('Enter');
+    assert(await page.locator('.conditions-menu').isVisible());
+    assert.equal(await page.locator('.conditions-menu > div').count(), 7);
+    assert((await page.locator('.conditions-menu').textContent()).includes('1 000 000'));
+    await allConditions.focus(); await page.keyboard.press('Enter');
+    assert.equal(await page.locator('.conditions-menu').isVisible(), false);
+    const information = page.locator('.mobile-summary summary');
+    await information.focus(); await page.keyboard.press('Enter');
+    assert((await page.locator('.mobile-summary').textContent()).includes('учебному календарю'));
+    await information.focus(); await page.keyboard.press('Enter');
    }
    await page.locator('.card summary').last().evaluate(el => el.scrollIntoView({ block: 'start' }));
    assert((await page.locator('.card summary').last().boundingBox()).y >= stickyHeader.height, 'facts not covered by sticky header');
@@ -85,7 +97,6 @@ mkdirSync(screenshots, { recursive: true });
    if (width === 1440 || width === 390) {
     await page.locator('.card summary').first().click();
     await page.evaluate(() => document.activeElement.blur());
-    await page.locator('.conditions-list').evaluate(el => { el.scrollLeft = 0; });
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));

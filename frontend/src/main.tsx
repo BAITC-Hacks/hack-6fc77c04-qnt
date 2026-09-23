@@ -125,7 +125,18 @@ function App() {
   <main ref={screen} className={compact ? 'has-results' : undefined}><div className="hero" ref={resultHeader}><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a>{compact ? <button className="edit-conditions" onClick={editConditions} aria-controls="event-form" aria-expanded={false}>Изменить условия <span aria-hidden="true">↗</span></button> : <span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span>}<button className="estimate-nav" type="button" onClick={() => { estimateSection.current?.focus({preventScroll:true}); estimateSection.current?.scrollIntoView({block: 'start'}); }}>Смета · {estimate.length}</button></header>
   {compact && <section className="conditions" aria-labelledby="conditions-title">
    <h1 id="conditions-title" className="sr-only">Условия вашего события</h1>
-   <dl className="conditions-list" tabIndex={0} aria-label="Условия подбора; на узком экране список прокручивается по горизонтали">
+   <div className="conditions-glance">
+    <span>{form.city} <span aria-hidden="true">·</span> {form.date.split('-').reverse().join('.')}<span className="glance-category"> <span aria-hidden="true">·</span> {form.category}</span></span>
+    <details className="conditions-mobile"><summary>Все условия</summary>
+     <dl className="conditions-menu">
+      <div><dt>Город</dt><dd>{form.city}</dd></div><div><dt>Дата</dt><dd>{form.date.split('-').reverse().join('.')}</dd></div>
+      <div><dt>Формат</dt><dd>{form.event_format}</dd></div><div><dt>Категория</dt><dd>{form.category}</dd></div>
+      <div><dt>Бюджет на одного</dt><dd>до {new Intl.NumberFormat('ru-RU').format(Number(form.budget_kzt))} ₸</dd></div>
+      <div><dt>Язык</dt><dd>{form.language || 'Без ограничения'}</dd></div><div><dt>Длительность</dt><dd>{form.duration_hours ? `${form.duration_hours} ч` : 'Без ограничения'}</dd></div>
+     </dl>
+    </details>
+   </div>
+   <dl className="conditions-list conditions-desktop">
     <div><dt>Город</dt><dd>{form.city}</dd></div><div><dt>Дата</dt><dd>{form.date.split('-').reverse().join('.')}</dd></div>
     <div><dt>Формат</dt><dd>{form.event_format}</dd></div><div><dt>Категория</dt><dd>{form.category}</dd></div>
     <div><dt>Бюджет на одного</dt><dd>до {new Intl.NumberFormat('ru-RU').format(Number(form.budget_kzt))} ₸</dd></div>

@@ -1,6 +1,27 @@
 /* Mobile reading layout. Keep the desktop editorial composition unchanged. */
 main { overflow-anchor: none; }
+.conditions-glance, .mobile-summary { display: none; }
 @media (max-width: 760px) {
+ .has-results .hero { padding-bottom: 0; }
+ .has-results header { min-height: 56px; }
+ .has-results .conditions { padding: 0 16px; border-top: 1px solid #ffffff2b; }
+ .has-results .conditions-desktop { display: none; }
+ .conditions-glance { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 46px; }
+ .conditions-glance > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #f6ecdf; font-size: 14px; }
+ .conditions-mobile { display: block; position: relative; flex: 0 0 auto; }
+ .conditions-mobile > summary { min-height: 44px; padding: 10px 0 10px 8px; color: #ecd3b8; white-space: nowrap; font-size: 13px; font-weight: 600; }
+ .conditions-menu { position: absolute; right: 0; top: 100%; z-index: 22; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; width: min(340px, calc(100vw - 32px)); max-height: calc(100dvh - 112px); overflow-y: auto; padding: 16px; margin: 0; border: 1px solid #77624d; border-radius: 0 0 10px 10px; background: #2b241d; box-shadow: 0 12px 24px #0005; }
+ .conditions-menu dt { margin: 0 0 3px; color: #d0beaa; font-size: 12px; }
+ .conditions-menu dd { margin: 0; color: #fff8ed; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+ .has-results .content { padding-top: 18px; }
+ .has-results .results > .section-title { margin-bottom: 9px; }
+ .desktop-summary, .has-results .explanation-note { display: none; }
+ .mobile-summary { display: block; margin-bottom: 12px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+ .mobile-summary > summary { min-height: 44px; padding: 12px 2px; font-size: 14px; font-weight: 600; color: #864821; }
+ .mobile-summary-body { padding: 2px 2px 14px; }
+ .mobile-summary-body > p { font-size: 14px; line-height: 1.6; }
+ .mobile-summary .result-counts { margin: 8px 0; }
+ .mobile-summary .calendar-note { line-height: 1.6; }
  .content { padding: 24px 16px; }
  .card { display: block; padding: 20px 16px; margin-bottom: 18px; border-color: #d5c9bc; }
  .card-index { display: none; }
@@ -54,6 +75,7 @@ main { overflow-anchor: none; }
  footer { font-size: 12px; line-height: 1.6; }
 }
 @media (max-width: 430px) {
+ .glance-category { display: none; }
  .fields { grid-template-columns: minmax(0, 1fr); }
  .has-results .results h2 { font-size: 34px; }
  .has-results .results > .section-title .step { display: none; }
