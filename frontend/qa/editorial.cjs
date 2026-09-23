@@ -13,10 +13,18 @@ mkdirSync(screenshots, { recursive: true });
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
+  const settle = () => page.evaluate(async () => {
+   await Promise.all(document.querySelector('main').getAnimations().map(a => a.finished.catch(() => {})));
+   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   async function openForm() {
    if (await page.locator('.edit-conditions').count()) {
     await page.locator('.edit-conditions').click();
     await page.waitForFunction(() => document.activeElement.id === 'city');
+    await settle();
+    const settledScroll = await page.evaluate(() => scrollY);
+    await settle();
+    assert.equal(await page.evaluate(() => scrollY), settledScroll, 'form focus does not cause a second scroll');
    }
   }
   async function submit() { await openForm(); await page.locator('button[type=submit]').click(); }
@@ -25,6 +33,7 @@ mkdirSync(screenshots, { recursive: true });
    await submit();
    const data = await (await response).json();
    await page.locator('.summary').waitFor();
+   await settle();
    assert.equal(await page.locator('.card').count(), data.returned_count);
    assert.deepEqual(await page.locator('.card h3').allTextContents(), data.cards.map(c => c.name));
    return data;
@@ -62,9 +71,11 @@ mkdirSync(screenshots, { recursive: true });
    const stickyHeader = await page.locator('.hero').boundingBox();
    assert(Math.abs(stickyHeader.y) < 1, 'results header remains pinned');
    if (width <= 760) {
+    assert(await page.locator('.choice-reason > p').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 16), 'mobile explanation text');
+    assert(await page.locator('.explanation-badge').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 13), 'mode label readable');
+    assert(await page.locator('.conditions-list dd').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 14), 'conditions readable');
     assert(stickyHeader.height < 150, 'mobile header leaves room for results');
     await page.locator('.conditions-list').focus();
-    await page.keyboard.press('End');
     await page.locator('.conditions-list').evaluate(el => { el.scrollLeft = el.scrollWidth; });
     assert(await page.locator('.conditions-list').evaluate(el => el.scrollLeft > 0), 'all mobile conditions remain reachable');
    }
@@ -147,5 +158,14 @@ mkdirSync(screenshots, { recursive: true });
   });
   assert.deepEqual(dimensions, [1200, 630]);
   console.log('PASS production metadata, local icon links and 1200x630 OG image (not public chat previews)');
+  await page.unrouteAll();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(base);
+  await search();
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'results-title');
+  assert.equal(await page.evaluate(() => document.querySelector('main').getAnimations().length), 0);
+  await openForm();
+  assert.equal(await page.evaluate(() => document.querySelector('main').getAnimations().length), 0);
+  console.log('PASS reduced motion: no screen animation, results/form focus retained');
  } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

@@ -4,12 +4,15 @@ import { demo, getOptions, match } from './api';
 import { examples } from './demo';
 import type { Options, Match, Request, Reason, Card } from './types';
 import './style.css';
+import { useScreenTransition } from './useScreenTransition';
 import { ContractorCard, ResultSummary } from './ResultDetails';
 import { EstimatePanel } from './EstimatePanel';
 import { addEstimateItem, replaceEstimateItem, removeEstimateItem, readEstimate, saveEstimate } from './estimate';
 import type { EstimateItem } from './estimate';
+import './mobile.css';
 const reasons: Record<Reason, string> = { busy: 'Заняты в эту дату', format: 'Другой формат', budget: 'Выше бюджета', language: 'Не подходит язык', duration: 'Не подходит длительность' };
 function App() {
+ const { screen, transition, cancelTransition } = useScreenTransition();
  const [options, setOptions] = useState<Options>();
  const [optionsError, setOptionsError] = useState('');
  const [reload, setReload] = useState(0);
@@ -38,12 +41,6 @@ function App() {
  }, [reload]);
  useEffect(() => () => active.current?.abort(), []);
  useEffect(() => {
-  if (compact) {
-   outcome.current?.focus({ preventScroll: true });
-   window.scrollTo({ top: 0, behavior: 'instant' });
-  }
- }, [compact]);
- useEffect(() => {
   if (!compact || !resultHeader.current) return;
   const root = document.documentElement;
   const previous = root.style.scrollPaddingTop;
@@ -53,19 +50,30 @@ function App() {
   observer.observe(resultHeader.current);
   return () => { observer.disconnect(); root.style.scrollPaddingTop = previous; };
  }, [compact]);
- function editConditions() {
-  setCompact(false);
-  requestAnimationFrame(() => firstField.current?.focus());
+ function revealForm(update = () => {}) {
+  const focusForm = () => {
+   firstField.current?.focus({ preventScroll: true });
+   firstField.current?.scrollIntoView({ block: 'center', behavior: 'instant' });
+  };
+  if (!compact) { update(); focusForm(); return; }
+  void transition(() => { setCompact(false); update(); }, focusForm);
  }
+ function editConditions() { revealForm(); }
  useEffect(() => { setStorageAvailable(demo || saveEstimate(estimate)); }, [estimate]);
  useEffect(() => { if (pendingSelection) { estimateSection.current?.focus({preventScroll:true}); estimateSection.current?.scrollIntoView({block:'start'}); } }, [pendingSelection]);
- function clear() { sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setResultRequest(undefined); setPendingSelection(undefined); setError(''); }
+ function clear() { cancelTransition(); sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setResultRequest(undefined); setPendingSelection(undefined); setError(''); }
  function update(key: keyof typeof form, value: string) { clear(); if (['city', 'date', 'event_format', 'category'].includes(key)) { setReplacingId(undefined); setEstimateNotice(''); } setForm(f => ({ ...f, [key]: value })); }
- function example(request: Request) { editConditions(); clear(); setReplacingId(undefined); setForm({ ...request, budget_kzt: String(request.budget_kzt), language: request.language ?? '', duration_hours: request.duration_hours === null ? '' : String(request.duration_hours) }); firstField.current?.focus(); }
+ function applyExample(request: Request) {
+  clear(); setReplacingId(undefined);
+  setForm({ ...request, budget_kzt: String(request.budget_kzt), language: request.language ?? '', duration_hours: request.duration_hours === null ? '' : String(request.duration_hours) });
+ }
+ function example(request: Request) { revealForm(() => applyExample(request)); }
  function replaceFromEstimate(item: EstimateItem) {
-  example(item.request);
-  setReplacingId(item.contractor.id);
-  setEstimateNotice(`Выберите замену для «${item.contractor.name}». Параметры поиска заполнены; нажмите «Подобрать подрядчиков». Текущая позиция сохранена до выбора замены.`);
+  revealForm(() => {
+   applyExample(item.request);
+   setReplacingId(item.contractor.id);
+   setEstimateNotice(`Выберите замену для «${item.contractor.name}». Параметры поиска заполнены; нажмите «Подобрать подрядчиков». Текущая позиция сохранена до выбора замены.`);
+  });
  }
  function choose(card: Card) {
   if (!resultRequest) return;
@@ -101,13 +109,20 @@ function App() {
   if (!Number.isSafeInteger(budget) || budget <= 0 || (hours !== null && (!Number.isFinite(hours) || hours <= 0)) || form.date < options.date_min || form.date > options.date_max || !options.cities.includes(form.city) || !options.categories.includes(form.category) || !options.event_formats.includes(form.event_format) || (form.language && !options.languages.includes(form.language))) { setError('Проверьте значения: бюджет — положительное целое число, часы — больше нуля, дата — в пределах календаря.'); return; }
   const controller = new AbortController(); active.current = controller; const version = ++sequence.current; setLoading(true);
   const request: Request = { ...form, budget_kzt: budget, language: form.language || null, duration_hours: hours };
-  try { const data = await match(request, controller.signal); if (sequence.current === version) { setResult(data); setResultRequest(request); setCompact(true); } }
+  try {
+   const data = await match(request, controller.signal);
+   if (sequence.current === version) await transition(
+    () => { setResult(data); setResultRequest(request); setCompact(true); setLoading(false); },
+    () => { outcome.current?.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' }); },
+    () => sequence.current === version && !controller.signal.aborted,
+   );
+  }
   catch (e) { if (sequence.current === version && !controller.signal.aborted) setError(e instanceof Error ? e.message : 'Не удалось выполнить запрос.'); }
   finally { if (sequence.current === version) setLoading(false); }
  }
  return <>
   {demo && <div className="demo" role="note">Демонстрационные ответы интерфейса <span>· Вымышленные примеры, без сервера и AI</span></div>}
-  <main className={compact ? 'has-results' : undefined}><div className="hero" ref={resultHeader}><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a>{compact ? <button className="edit-conditions" onClick={editConditions} aria-controls="event-form" aria-expanded={false}>Изменить условия <span aria-hidden="true">↗</span></button> : <span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span>}<button className="estimate-nav" type="button" onClick={() => { estimateSection.current?.focus({preventScroll:true}); estimateSection.current?.scrollIntoView({block: 'start'}); }}>Смета · {estimate.length}</button></header>
+  <main ref={screen} className={compact ? 'has-results' : undefined}><div className="hero" ref={resultHeader}><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a>{compact ? <button className="edit-conditions" onClick={editConditions} aria-controls="event-form" aria-expanded={false}>Изменить условия <span aria-hidden="true">↗</span></button> : <span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span>}<button className="estimate-nav" type="button" onClick={() => { estimateSection.current?.focus({preventScroll:true}); estimateSection.current?.scrollIntoView({block: 'start'}); }}>Смета · {estimate.length}</button></header>
   {compact && <section className="conditions" aria-labelledby="conditions-title">
    <h1 id="conditions-title" className="sr-only">Условия вашего события</h1>
    <dl className="conditions-list" tabIndex={0} aria-label="Условия подбора; на узком экране список прокручивается по горизонтали">
