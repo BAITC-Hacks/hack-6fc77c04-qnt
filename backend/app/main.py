@@ -68,6 +68,11 @@ def create_app(dataset_path: Path = DEFAULT_DATASET, *, catalog: Catalog | None 
         await app.state.selector.enrich(result, request, selected)
         return result
 
+    @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"], include_in_schema=False)
+    async def unknown_api(path: str):
+        # Keep unknown API paths out of the frontend mount, even after a UI build.
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
     # Same-origin production UI; all API routes are registered before the mount.
     static_dir = ROOT / "frontend" / "dist"
     if static_dir.is_dir():

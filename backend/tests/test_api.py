@@ -47,6 +47,12 @@ def test_no_old_mutating_endpoints(client):
         assert client.post(endpoint, json={}).status_code == 404
 
 
+def test_unknown_api_does_not_fall_through_to_frontend(client):
+    response = client.get("/api/not-a-real-endpoint")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not Found"}
+
+
 def test_optional_fields_can_be_omitted(client, payload):
     payload.pop("language")
     payload.pop("duration_hours")
