@@ -30,7 +30,7 @@ export function ResultSummary({ result, date }: { result: Match; date: string })
  </div>;
 }
 
-export function ContractorCard({ card }: { card: Card }) {
+export function ContractorCard({ card, index = 0 }: { card: Card; index?: number }) {
  const marker = ' В описании: ';
  const split = card.explanation.indexOf(marker);
  const quote = card.evidence.find(e => e.field === 'description')?.value;
@@ -38,6 +38,7 @@ export function ContractorCard({ card }: { card: Card }) {
  const separateQuote = split >= 0 && Boolean(quote);
  const facts = card.evidence.filter(e => !(separateQuote && e.field === 'description'));
  return <article className="card">
+  <div className="card-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}<span> / ПОДБОР</span></div><div className="card-body">
   <div className="card-top"><div><p className="meta">{card.category} · {card.city}</p><h3>{card.name}</h3></div><strong className="price">от {money(card.price_from_kzt)} ₸</strong></div>
   <section className="choice-reason" aria-label="Почему подходит">
    <div className="reason-heading"><h4>Почему подходит</h4><span className={`explanation-badge ${card.explanation_mode}`}>{card.explanation_mode === 'ai' ? 'AI выбрал факт' : 'Без AI · по данным каталога'}</span></div>
@@ -50,5 +51,5 @@ export function ContractorCard({ card }: { card: Card }) {
    {!facts.some(e => e.field === 'max_hours') && <div><dt>Продолжительность работы</dt><dd>{card.max_hours === null ? 'Не ограничена часами присутствия' : `${money(card.max_hours)} ч`}</dd></div>}
    {facts.map((e, i) => <div key={i}><dt>{labels[e.field] ?? 'Дополнительный факт'}</dt><dd>{evidenceValue(e.field, e.value)}</dd></div>)}
   </dl></details>
- </article>;
+ </div></article>;
 }

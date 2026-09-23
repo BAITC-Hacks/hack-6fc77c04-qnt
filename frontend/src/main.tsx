@@ -16,6 +16,7 @@ function App() {
  const [loading, setLoading] = useState(false);
  const active = useRef<AbortController | null>(null);
  const sequence = useRef(0);
+ const outcome = useRef<HTMLHeadingElement>(null);
  const firstField = useRef<HTMLSelectElement>(null);
  useEffect(() => {
   const controller = new AbortController();
@@ -39,9 +40,9 @@ function App() {
  }
  return <>
   {demo && <div className="demo" role="note">Демонстрационные ответы интерфейса <span>· Вымышленные примеры, без сервера и AI</span></div>}
-  <header><a className="brand" href="./"><span className="mark">F</span> Firebird</a><span className="tag">QNT / подбор подрядчиков</span></header>
-  <main><div className="intro"><p className="eyebrow">ВАШЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Нужные люди.<br/><span>Под ваше событие.</span></h1><p>Задайте условия — получите до трёх подрядчиков<br className="desktop"/> с понятным объяснением каждого выбора.</p></div>
-  <div className="layout"><section className="panel" aria-labelledby="form-title"><div className="section-title"><span className="step">01</span><h2 id="form-title">Параметры мероприятия</h2></div>
+  <main><div className="hero"><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a><span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span></header>
+  <div className="hero-content"><div className="intro"><div className="intro-copy"><p className="eyebrow">ВАШЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Нужные люди.<br/><span>Под ваше событие.</span></h1><p>Задайте условия — получите до трёх подрядчиков<br className="desktop"/> с понятным объяснением каждого выбора.</p></div><div className="benefits"><div><span aria-hidden="true">♧</span>Проверяем<br/>по вашим условиям</div><div><span aria-hidden="true">≡</span>Объясняем<br/>каждый выбор</div><div><span aria-hidden="true">◇</span>До трёх<br/>вариантов</div></div></div>
+  <section className="panel" aria-labelledby="form-title"><div className="section-title"><h2 id="form-title">Ваше событие</h2></div>
   {!options && !optionsError && <p role="status">Загружаем справочники…</p>}
   {optionsError && <div role="alert" className="error"><p>{optionsError}</p><button onClick={() => setReload(r => r + 1)}>Повторить загрузку</button></div>}
   {options && <form onSubmit={submit}><div className="fields">
@@ -52,15 +53,16 @@ function App() {
    <label className="wide" htmlFor="budget">Бюджет на одного подрядчика, ₸<input id="budget" type="number" inputMode="numeric" required min="1" step="1" value={form.budget_kzt} onChange={e => update('budget_kzt', e.target.value)}/><small>За мероприятие. Цена в карточке указана «от».</small></label>
    <label htmlFor="language">Язык <small>необязательно</small><select id="language" value={form.language} onChange={e => update('language', e.target.value)}><option value="">Без ограничения</option>{options.languages.map(v => <option key={v}>{v}</option>)}</select></label>
    <label htmlFor="hours">Часы <small>необязательно</small><input id="hours" type="number" min="0.01" step="any" placeholder="Без ограничения" value={form.duration_hours} onChange={e => update('duration_hours', e.target.value)}/></label>
-  </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button></form>}
-  <div className="examples"><p>Попробуйте готовый пример</p><div>{examples.map(e => <button key={e.title} disabled={!options} onClick={() => example(e.request)}>{e.title}</button>)}</div><small>Пример заполняет форму. Нажмите кнопку подбора.</small></div></section>
-  <section className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step">02</span><h2 id="results-title">Ваш подбор</h2></div>
-  <div aria-live="polite" aria-atomic="true">{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <ResultSummary result={result} date={form.date}/>}</div>
+  </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button><div className="search-feedback" role="status" aria-atomic="true">{loading ? 'Проверяем условия. Ожидание — до 12 секунд…' : error ? 'Не удалось выполнить подбор.' : result ? (result.returned_count ? `Подбор готов: ${result.returned_count} варианта.` : 'Подбор завершён: совпадений нет.') : ''}</div>{(result || error) && <button className="outcome-link" type="button" onClick={() => { outcome.current?.focus({ preventScroll: true }); outcome.current?.scrollIntoView({ block: 'start' }); }}>{error ? 'Перейти к ошибке' : 'Посмотреть результат'} ↓</button>}</form>}
+  <div className="examples"><p>Попробуйте готовый пример</p><div>{examples.map(e => <button key={e.title} disabled={!options} onClick={() => example(e.request)}>{e.title}</button>)}</div><small>Пример заполняет форму. Нажмите кнопку подбора.</small></div></section></div></div>
+  <div className="content"><section className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step">02</span><h2 id="results-title" ref={outcome} tabIndex={-1}>Ваш подбор<span className="title-dot">.</span></h2></div>
+  <div>{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <ResultSummary result={result} date={form.date}/>}</div>
   {error && <div className="error" role="alert">{error}<p>Параметры сохранены. Повторите подбор.</p></div>}
-  {!result && !loading && !error && <div className="empty"><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
-  {result?.cards.map(card => <ContractorCard key={card.id} card={card}/>)}
+  {!result && !loading && !error && <div className="empty"><p className="eyebrow">ЛЮДИ / ИДЕИ / СОБЫТИЯ</p><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
+  {Boolean(result?.cards.length) && <p className="explanation-note">Соответствие условиям проверяет программный код. AI может выбрать цитату для объяснения; local — объяснение без AI.</p>}
+  {result?.cards.map((card, index) => <ContractorCard key={card.id} card={card} index={index}/>)}
   {result && <><details className="filters"><summary>Как условия повлияли на подбор</summary><p>В городе и категории: {result.total_in_category}. Последовательные фильтры: каждый исключённый кандидат учитывается только по первой причине.</p><ul>{result.rejections.map(r => <li key={r.code}>{reasons[r.code]} <strong>{r.count}</strong></li>)}</ul></details>{result.returned_count === 0 && <button onClick={() => firstField.current?.focus()}>Изменить условия ↑</button>}</>}
-  </section></div><footer>Источник: учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны только отдельные вымышленные фикстуры.'} Подбор не является бронированием.</footer></main>
+  </section><footer>Источник: учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны только отдельные вымышленные фикстуры.'} Подбор не является бронированием.</footer></div></main>
  </>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);
