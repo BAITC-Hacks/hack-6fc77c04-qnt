@@ -39,3 +39,15 @@
 - Повторён frontend/qa/editorial.cjs против заново запущенного backend текущей версии на 8002, ENABLE_AI=false: все шесть ширин и сценарии PASS. Три реальных исхода, короткая выдача, клавиатура, отсутствие переполнения, повтор после подменённой ошибки и отмена позднего ответа. Подмены AI/флагов/двух карточек остаются только проверкой рендеринга.
 - Скриншоты обновлены; desktop визуально просмотрен. Деморежим отдельно повторно после интеграции не запускался (фикстуры покрыты тестами). Ограничения физического телефона, Safari, реального AI и публичного сервера остаются в силе.
 - Backend, README и остальные входящие файлы приняты из коммита Естая без дополнительных правок. Это интеграция main в рабочую ветку, не слияние в main и не деплой.
+
+## Дизайн по референсу Бекзата, 23.09.2026
+
+Первый экран полностью перекомпонован: фотографический фон, антиква, светлая форма справа; результаты — широкие горизонтальные карточки ниже. На мобильном — последовательная вертикальная композиция. Компоненты ResultSummary/ContractorCard и API сохранены. Из изображения не перенесены выдуманные рейтинги, «лучшие» подрядчики и ошибочная атрибуция local как AI.
+
+Фон `frontend/public/event-dinner.webp` создан встроенным imagegen, не является фотографией реального подрядчика. Размер 1536×1024, 111914 байт; сжатие WebP quality 78. Внешних запросов за изображениями/шрифтами и новых runtime-зависимостей нет. Pillow установлен только во временное QA-окружение.
+
+Промпт генерации: “Generate a photorealistic website hero background, landscape 1536x1024. Elegant intimate evening event dinner in a high-rise venue, floor-to-ceiling windows and distant city lights at dusk. Warm candlelight, ivory flowers, fine glassware and linen on a dinner table. Main floral arrangement in center-right. Left third very dark and uncluttered for overlay headline; right third can be covered by a UI form. Cinematic natural editorial photography, espresso black shadows, warm champagne highlights, quiet premium mood. No people, NO text, no letters, no signage, no logos, no interface. This is a background asset, not a screenshot.”
+
+Проверки: 17/17 frontend-тестов PASS, production build PASS (VITE_DEMO_MODE=false). Браузерный QA против реального обновлённого backend на 8002 без AI: все сценарии PASS на 320/375/390/768/1024/1440, включая пустую и короткую выдачу, отсутствие категории, клавиатуру, отмену позднего ответа, повтор после искусственной 503. AI/флаги/длинный текст/две карточки проверены подменами ответа. Скриншоты desktop/mobile обновлены и визуально просмотрены. Ограничения физических устройств и реального AI прежние.
+
+Размер production: JS 239.56 kB (gzip 75.09), CSS около 10.3 kB (gzip около 3), HTML 0.44 kB; плюс WebP 111.91 kB. Общий объём около 362 kB, передача с gzip для кода около 191 kB. Lighthouse и реальные сетевые замеры не проводились. Backend, README, контракт, деплой не изменялись.
