@@ -2,3 +2,7 @@ node_modules/
 dist/
 .env.local
 *.tsbuildinfo
+.qa-venv/
+test-results/
+playwright-report/
+.qa/
