@@ -156,3 +156,25 @@ h1{font-size:39px}
 .has-results .content{padding-top:25px}
 @media(max-width:760px){.conditions{padding:16px 20px 0}.conditions-heading{gap:12px}.conditions h1{font-size:23px}.edit-conditions{font-size:11px;padding:9px}.conditions-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}.conditions-list dd{font-size:12px}.conditions-list dt{font-size:10px}.has-results .tag{display:none}}
 @media(max-width:360px){.conditions{padding-left:16px;padding-right:16px}.conditions h1{font-size:21px}.edit-conditions{gap:6px}}
+
+/* Dedicated results screen; conditions remain accessible while scrolling. */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%);white-space:nowrap!important;border:0!important}
+.has-results{min-height:100dvh}
+.has-results .hero{position:sticky;top:0;z-index:20;background:#211b15;border-radius:0;padding-bottom:14px;box-shadow:0 6px 24px #211b151c}
+.has-results header{padding-top:12px;padding-bottom:12px;border:0}
+.has-results .brand{font-size:26px}
+.has-results .mark{font-size:32px}
+.has-results .conditions{padding-top:0}
+.has-results .conditions-list{gap:10px 26px;padding:0 0 2px}
+.has-results .conditions-list>div{border-left:1px solid #ffffff26;padding-left:14px}
+.has-results .conditions-list>div:first-child{border-left:0;padding-left:0}
+.has-results .conditions-list dt{font-size:10px}
+.has-results .conditions-list dd{font-size:12px}
+.has-results .content{padding-top:38px;min-height:calc(100dvh - 150px)}
+.has-results .results>.section-title{margin-bottom:22px;gap:18px}
+.has-results .results h2{font-size:54px;letter-spacing:-1.8px;scroll-margin-top:12px}
+.has-results .results>.section-title .step{font-size:32px;text-decoration:none;color:#aa7b56}
+.result-total{margin-left:auto;border:1px solid var(--line);border-radius:30px;padding:7px 13px;font-size:11px;color:var(--muted);white-space:nowrap}
+.has-results .card,.has-results summary{scroll-margin-top:16px}
+@media(max-width:760px){.has-results header{padding:10px 20px}.has-results .brand{font-size:23px;gap:8px}.has-results .brand-case{font-size:9px;padding-left:9px}.has-results .mark{font-size:28px}.has-results .hero{padding-bottom:10px}.has-results .conditions{padding:0 20px}.has-results .conditions-list{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:14px;padding:4px 0 9px;scrollbar-width:thin;scrollbar-color:#a58b70 #211b15}.has-results .conditions-list>div{flex:0 0 auto;max-width:220px;padding-left:14px}.has-results .conditions-list dd{font-size:12px}.has-results .content{padding-top:28px}.has-results .results h2{font-size:37px;letter-spacing:-1px}.has-results .results>.section-title{gap:10px;flex-wrap:wrap}.has-results .results>.section-title .step{font-size:25px}.result-total{padding:5px 9px;font-size:10px}.has-results .edit-conditions{font-size:11px;gap:8px;padding:8px 10px}}
+@media(max-width:360px){.has-results header{padding-left:16px;padding-right:16px}.has-results .brand-case{display:none}.has-results .conditions{padding-left:16px;padding-right:16px}.has-results .results h2{font-size:32px}.result-total{margin-left:0}}

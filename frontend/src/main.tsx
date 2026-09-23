@@ -17,6 +17,7 @@ function App() {
  const [compact, setCompact] = useState(false);
  const active = useRef<AbortController | null>(null);
  const sequence = useRef(0);
+ const resultHeader = useRef<HTMLDivElement>(null);
  const outcome = useRef<HTMLHeadingElement>(null);
  const firstField = useRef<HTMLSelectElement>(null);
  useEffect(() => {
@@ -31,6 +32,16 @@ function App() {
    outcome.current?.focus({ preventScroll: true });
    window.scrollTo({ top: 0, behavior: 'instant' });
   }
+ }, [compact]);
+ useEffect(() => {
+  if (!compact || !resultHeader.current) return;
+  const root = document.documentElement;
+  const previous = root.style.scrollPaddingTop;
+  const observer = new ResizeObserver(([entry]) => {
+   root.style.scrollPaddingTop = `${entry.target.getBoundingClientRect().height + 16}px`;
+  });
+  observer.observe(resultHeader.current);
+  return () => { observer.disconnect(); root.style.scrollPaddingTop = previous; };
  }, [compact]);
  function editConditions() {
   setCompact(false);
@@ -51,10 +62,10 @@ function App() {
  }
  return <>
   {demo && <div className="demo" role="note">Демонстрационные ответы интерфейса <span>· Вымышленные примеры, без сервера и AI</span></div>}
-  <main className={compact ? 'has-results' : undefined}><div className="hero"><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a><span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span></header>
+  <main className={compact ? 'has-results' : undefined}><div className="hero" ref={resultHeader}><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a>{compact ? <button className="edit-conditions" onClick={editConditions} aria-controls="event-form" aria-expanded={false}>Изменить условия <span aria-hidden="true">↗</span></button> : <span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span>}</header>
   {compact && <section className="conditions" aria-labelledby="conditions-title">
-   <div className="conditions-heading"><h1 id="conditions-title">Ваше событие</h1><button className="edit-conditions" onClick={editConditions} aria-controls="event-form" aria-expanded={false}>Изменить условия <span aria-hidden="true">↗</span></button></div>
-   <dl className="conditions-list">
+   <h1 id="conditions-title" className="sr-only">Условия вашего события</h1>
+   <dl className="conditions-list" tabIndex={0} aria-label="Условия подбора; на узком экране список прокручивается по горизонтали">
     <div><dt>Город</dt><dd>{form.city}</dd></div><div><dt>Дата</dt><dd>{form.date.split('-').reverse().join('.')}</dd></div>
     <div><dt>Формат</dt><dd>{form.event_format}</dd></div><div><dt>Категория</dt><dd>{form.category}</dd></div>
     <div><dt>Бюджет на одного</dt><dd>до {new Intl.NumberFormat('ru-RU').format(Number(form.budget_kzt))} ₸</dd></div>
@@ -75,7 +86,7 @@ function App() {
    <label htmlFor="hours">Часы <small>необязательно</small><input id="hours" type="number" min="0.01" step="any" placeholder="Без ограничения" value={form.duration_hours} onChange={e => update('duration_hours', e.target.value)}/></label>
   </div><p className="hint">Календарь: 23 сентября — 31 декабря 2026. Наличие даты в календаре не подтверждает бронирование.</p><button className="primary" type="submit">{loading ? 'Подбираем… Повторить запрос' : 'Подобрать подрядчиков'}<span aria-hidden="true">↗</span></button><div className="search-feedback" role="status" aria-atomic="true">{loading ? 'Проверяем условия. Ожидание — до 12 секунд…' : error ? 'Не удалось выполнить подбор.' : result ? (result.returned_count ? `Подбор готов: ${result.returned_count} варианта.` : 'Подбор завершён: совпадений нет.') : ''}</div>{(result || error) && <button className="outcome-link" type="button" onClick={() => { outcome.current?.focus({ preventScroll: true }); outcome.current?.scrollIntoView({ block: 'start' }); }}>{error ? 'Перейти к ошибке' : 'Посмотреть результат'} ↓</button>}</form>}
   <div className="examples"><p>Попробуйте готовый пример</p><div>{examples.map(e => <button key={e.title} disabled={!options} onClick={() => example(e.request)}>{e.title}</button>)}</div><small>Пример заполняет форму. Нажмите кнопку подбора.</small></div></section></div></div>
-  <div className="content"><section className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step">02</span><h2 id="results-title" ref={outcome} tabIndex={-1}>Ваш подбор<span className="title-dot">.</span></h2></div>
+  <div className="content" hidden={!compact && !loading && !error}><section className="results" aria-labelledby="results-title" aria-busy={loading}><div className="section-title"><span className="step" aria-hidden="true">✳</span><h2 id="results-title" ref={outcome} tabIndex={-1}>Ваш подбор<span className="title-dot">.</span></h2>{compact && result && <span className="result-total">Показано: {result.returned_count}</span>}</div>
   <div>{loading && <p className="status">Проверяем условия. Ожидание — до 12 секунд…</p>}{result && <ResultSummary result={result} date={form.date}/>}</div>
   {error && <div className="error" role="alert">{error}<p>Параметры сохранены. Повторите подбор.</p></div>}
   {!result && !loading && !error && <div className="empty"><p className="eyebrow">ЛЮДИ / ИДЕИ / СОБЫТИЯ</p><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}

@@ -36,6 +36,7 @@ mkdirSync(screenshots, { recursive: true });
    await page.setViewportSize({ width, height: 900 });
    await page.goto(base);
    await page.locator('#city option').first().waitFor({ state: 'attached' });
+   assert.equal(await page.locator('.content').isVisible(), false);
    if (width === 1440) await page.screenshot({ path: join(screenshots, 'before-search-1440.png'), fullPage: true });
    assert.equal(await page.locator('.demo').count(), 0);
    const data = await search();
@@ -57,10 +58,27 @@ mkdirSync(screenshots, { recursive: true });
     assert((await page.locator('.card').first().textContent()).includes(fact.value));
    }
    await fits();
+   await page.evaluate(() => window.scrollTo(0, 500));
+   const stickyHeader = await page.locator('.hero').boundingBox();
+   assert(Math.abs(stickyHeader.y) < 1, 'results header remains pinned');
+   if (width <= 760) {
+    assert(stickyHeader.height < 150, 'mobile header leaves room for results');
+    await page.locator('.conditions-list').focus();
+    await page.keyboard.press('End');
+    await page.locator('.conditions-list').evaluate(el => { el.scrollLeft = el.scrollWidth; });
+    assert(await page.locator('.conditions-list').evaluate(el => el.scrollLeft > 0), 'all mobile conditions remain reachable');
+   }
+   await page.locator('.card summary').last().evaluate(el => el.scrollIntoView({ block: 'start' }));
+   assert((await page.locator('.card summary').last().boundingBox()).y >= stickyHeader.height, 'facts not covered by sticky header');
    assert(await page.locator('input,select').evaluateAll(els => els.every(e => e.labels.length && getComputedStyle(e).fontSize === '16px')));
    if (width === 1440 || width === 390) {
     await page.locator('.card summary').first().click();
-    await page.evaluate(() => { document.activeElement.blur(); window.scrollTo(0, 0); });
+    await page.evaluate(() => document.activeElement.blur());
+    await page.locator('.conditions-list').evaluate(el => { el.scrollLeft = 0; });
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await page.evaluate(() => scrollY), 0);
     await page.screenshot({ path: join(screenshots, `editorial-${width}.png`), fullPage: true });
    }
    await openForm();
