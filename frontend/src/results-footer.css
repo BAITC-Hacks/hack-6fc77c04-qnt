@@ -1,0 +1,17 @@
+.results-footer{position:sticky;bottom:12px;z-index:3;margin-top:22px;border:1px solid #d6c7b7;border-radius:10px;background:#faf6effa;box-shadow:0 4px 20px #3b291b12;backdrop-filter:blur(12px)}
+.results-filter-details{max-height:min(50vh,390px);overflow:auto;overscroll-behavior:contain;border-radius:inherit;scrollbar-gutter:stable}
+.results-filter-details>summary{display:flex;align-items:center;gap:16px;list-style:none;min-height:62px;padding:14px 20px;font-size:13px;font-weight:600;line-height:1.4}
+.results-filter-details>summary::-webkit-details-marker{display:none}
+.results-filter-details>summary::after{content:'+';font-size:22px;font-weight:400;color:var(--accent);margin-left:auto}
+.results-filter-details[open]>summary::after{content:'−'}
+.results-filter-count{font-size:11px;color:var(--muted);font-weight:400;white-space:nowrap}
+.results-filter-content{border-top:1px solid var(--line);padding:0 20px 16px;font-size:13px;line-height:1.5}
+.results-filter-overview{margin:14px 0}
+.results-filter-content ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px;padding:0;margin:0;list-style:none}
+.results-filter-content li{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+.results-filter-content li strong{color:var(--accent);font-variant-numeric:tabular-nums}
+.results-filter-content .no-exclusions,.results-filter-content .no-exclusions strong{color:var(--muted)}
+.results-filter-note{margin:14px 0 0;color:var(--muted);font-size:11px}
+.results .card :is(button,summary){scroll-margin-bottom:90px}
+@media(max-width:760px){.results-footer{bottom:8px;margin-top:18px}.results-filter-details>summary{gap:8px;padding:12px 14px;flex-wrap:wrap}.results-filter-details>summary>span:first-child{flex:1 1 calc(100% - 30px)}.results-filter-details>summary::after{order:-1;margin-left:0;width:15px}.results-filter-count{margin-left:23px}.results-filter-content{padding:0 14px 14px}.results-filter-content ul{grid-template-columns:minmax(0,1fr)}.results .card :is(button,summary){scroll-margin-bottom:110px}}
+@media print{.results-footer{position:static;box-shadow:none;backdrop-filter:none}.results-filter-details{max-height:none;overflow:visible}}

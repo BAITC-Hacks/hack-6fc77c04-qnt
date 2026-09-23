@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { demo, getOptions, match } from './api';
 import { examples } from './demo';
-import type { Options, Match, Request, Reason, Card } from './types';
+import type { Options, Match, Request, Card } from './types';
 import './style.css';
 import { ContractorCard, ResultSummary } from './ResultDetails';
 import { EstimatePanel } from './EstimatePanel';
+import { EstimateDialog } from './EstimateDialog';
+import { ResultsFooter } from './ResultsFooter';
 import { addEstimateItem, replaceEstimateItem, removeEstimateItem, readEstimate, saveEstimate } from './estimate';
 import type { EstimateItem } from './estimate';
-const reasons: Record<Reason, string> = { busy: 'Заняты в эту дату', format: 'Другой формат', budget: 'Выше бюджета', language: 'Не подходит язык', duration: 'Не подходит длительность' };
 function App() {
  const [options, setOptions] = useState<Options>();
  const [optionsError, setOptionsError] = useState('');
@@ -21,7 +22,7 @@ function App() {
  const [estimateNotice, setEstimateNotice] = useState('');
  const [pendingSelection, setPendingSelection] = useState<{card: Card; request: Request}>();
  const [storageAvailable, setStorageAvailable] = useState(true);
- const estimateSection = useRef<HTMLDivElement>(null);
+ const [estimateOpen, setEstimateOpen] = useState(false);
  const [error, setError] = useState('');
  const [loading, setLoading] = useState(false);
  const active = useRef<AbortController | null>(null);
@@ -36,14 +37,16 @@ function App() {
  }, [reload]);
  useEffect(() => () => active.current?.abort(), []);
  useEffect(() => { setStorageAvailable(demo || saveEstimate(estimate)); }, [estimate]);
- useEffect(() => { if (pendingSelection) { estimateSection.current?.focus({preventScroll:true}); estimateSection.current?.scrollIntoView({block:'start'}); } }, [pendingSelection]);
+ useEffect(() => { if (!estimateNotice || estimateOpen) return; const timer = window.setTimeout(() => setEstimateNotice(''), 6000); return () => window.clearTimeout(timer); }, [estimateNotice, estimateOpen]);
+ function closeEstimate() { setEstimateOpen(false); setEstimateNotice(''); }
  function clear() { sequence.current++; active.current?.abort(); setLoading(false); setResult(undefined); setResultRequest(undefined); setPendingSelection(undefined); setError(''); }
  function update(key: keyof typeof form, value: string) { clear(); if (['city', 'date', 'event_format', 'category'].includes(key)) { setReplacingId(undefined); setEstimateNotice(''); } setForm(f => ({ ...f, [key]: value })); }
  function example(request: Request) { clear(); setReplacingId(undefined); setForm({ ...request, budget_kzt: String(request.budget_kzt), language: request.language ?? '', duration_hours: request.duration_hours === null ? '' : String(request.duration_hours) }); firstField.current?.focus(); }
  function replaceFromEstimate(item: EstimateItem) {
+  closeEstimate();
   example(item.request);
   setReplacingId(item.contractor.id);
-  setEstimateNotice(`Выберите замену для «${item.contractor.name}». Параметры поиска заполнены; нажмите «Подобрать подрядчиков». Текущая позиция сохранена до выбора замены.`);
+  window.requestAnimationFrame(() => { firstField.current?.focus({preventScroll:true}); firstField.current?.scrollIntoView({block:'center'}); });
  }
  function choose(card: Card) {
   if (!resultRequest) return;
@@ -53,6 +56,7 @@ function App() {
   if (next.status === 'incompatible') {
    setPendingSelection({card, request: resultRequest});
    setEstimateNotice('Этот подбор относится к другому событию. Текущая смета сохранена.');
+   setEstimateOpen(true);
    return;
   }
   if (next.status === 'added' || next.status === 'replaced') {
@@ -85,7 +89,7 @@ function App() {
  }
  return <>
   {demo && <div className="demo" role="note">Демонстрационные ответы интерфейса <span>· Вымышленные примеры, без сервера и AI</span></div>}
-  <main><div className="hero"><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a><span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span><button className="estimate-nav" type="button" onClick={() => { estimateSection.current?.focus({preventScroll:true}); estimateSection.current?.scrollIntoView({block: 'start'}); }}>Смета · {estimate.length}</button></header>
+  <main><div className="hero"><header><a className="brand" href="./"><span className="mark" aria-hidden="true">✳</span> QNT <span className="brand-case">/ Firebird</span></a><span className="tag">СОБЫТИЯ НАЧИНАЮТСЯ С ЛЮДЕЙ</span><button className="estimate-nav" type="button" aria-haspopup="dialog" onClick={() => { setEstimateNotice(''); setEstimateOpen(true); }}>Посмотреть смету <span className="estimate-count">{estimate.length}</span></button></header>
   <div className="hero-content"><div className="intro"><div className="intro-copy"><p className="eyebrow">ВАШЕ СОБЫТИЕ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Нужные люди.<br/><span>Под ваше событие.</span></h1><p>Задайте условия — получите до трёх подрядчиков<br className="desktop"/> с понятным объяснением каждого выбора.</p></div><div className="benefits"><div><span aria-hidden="true">♧</span>Проверяем<br/>по вашим условиям</div><div><span aria-hidden="true">≡</span>Объясняем<br/>каждый выбор</div><div><span aria-hidden="true">◇</span>До трёх<br/>вариантов</div></div></div>
   <section className="panel" aria-labelledby="form-title"><div className="section-title"><h2 id="form-title">Ваше событие</h2></div>
   {!options && !optionsError && <p role="status">Загружаем справочники…</p>}
@@ -106,14 +110,17 @@ function App() {
   {!result && !loading && !error && <div className="empty"><p className="eyebrow">ЛЮДИ / ИДЕИ / СОБЫТИЯ</p><span className="empty-icon" aria-hidden="true">✳</span><h3>У каждого выбора — основания</h3><p>Здесь появятся кандидаты, цены<br/> и факты, на которых основан подбор.</p><div className="pills"><span>До 3 вариантов</span><span>Прозрачные условия</span></div></div>}
   {Boolean(result?.cards.length) && <p className="explanation-note">Соответствие условиям проверяет программный код. AI может выбрать цитату для объяснения; local — объяснение без AI.</p>}
   {result?.cards.map((card, index) => <ContractorCard key={card.id} card={card} index={index} selected={estimate.some(item => item.contractor.id === card.id && item.request.city === resultRequest?.city && item.request.date === resultRequest?.date && item.request.event_format === resultRequest?.event_format)} selectingReplacement={Boolean(replacingId)} onSelect={() => choose(card)}/>)}
-  {result && <><details className="filters"><summary>Как условия повлияли на подбор</summary><p>В городе и категории: {result.total_in_category}. Последовательные фильтры: каждый исключённый кандидат учитывается только по первой причине.</p><ul>{result.rejections.map(r => <li key={r.code}>{reasons[r.code]} <strong>{r.count}</strong></li>)}</ul></details>{result.returned_count === 0 && <button onClick={() => firstField.current?.focus()}>Изменить условия ↑</button>}</>}
+  {result?.returned_count === 0 && <button onClick={() => firstField.current?.focus()}>Изменить условия ↑</button>}
+  {result && <ResultsFooter result={result}/>}
   </section>
-  <div ref={estimateSection} tabIndex={-1} className="estimate-anchor">
+  <footer className="site-footer"><div className="footer-identity"><a className="footer-brand" href="./">QNT <span>/ Firebird</span></a><p>Нужные люди. Осознанный выбор.</p><span>HackAlem AI · 2026</span></div><div className="footer-team"><p className="footer-label">Сделано командой QNT</p><a href="https://github.com/Adventkz" target="_blank" rel="noreferrer">Естай <span>Подбор, AI и сервер ↗</span></a><a href="https://github.com/AbaevnaBeka" target="_blank" rel="noreferrer">Бекзат <span>Дизайн и интерфейс ↗</span></a></div><div className="footer-source"><p className="footer-label">О проекте</p><p>Учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны отдельные вымышленные примеры.'}</p><p>Цены указаны «от». Подбор и смета не являются бронированием.</p><a href="https://github.com/BAITC-Hacks/hack-6fc77c04-qnt" target="_blank" rel="noreferrer">Код и принципы подбора ↗</a></div></footer></div></main>
+  {!estimateOpen && estimateNotice && <p className="estimate-toast" role="status">{estimateNotice}</p>}
+  <EstimateDialog open={estimateOpen} onClose={closeEstimate}>
    {estimateNotice && <p className="estimate-feedback" role="status">{estimateNotice}</p>}
    {pendingSelection && <div className="estimate-conflict" role="alert"><p>Город, дата или формат отличаются от текущей сметы. Начать новую смету с «{pendingSelection.card.name}»? Текущие позиции будут удалены.</p><button type="button" onClick={startNewEstimate}>Начать новую смету</button><button type="button" onClick={() => { setPendingSelection(undefined); setEstimateNotice('Текущая смета сохранена.'); }}>Сохранить текущую</button></div>}
    {!storageAvailable && <p role="status">Браузер не разрешил сохранение. Смета доступна до закрытия или обновления страницы; скачайте её, чтобы сохранить.</p>}
    <EstimatePanel items={estimate} onRemove={removeFromEstimate} onReplace={replaceFromEstimate} onClear={() => { setEstimate([]); setReplacingId(undefined); setPendingSelection(undefined); setEstimateNotice('Смета очищена.'); }}/>
-  </div><footer>Источник: учебный каталог организатора{options ? ` · ${options.dataset_count} профилей` : ''}. {demo && 'Здесь показаны только отдельные вымышленные фикстуры.'} Подбор не является бронированием.</footer></div></main>
+  </EstimateDialog>
  </>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

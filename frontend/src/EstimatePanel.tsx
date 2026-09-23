@@ -1,4 +1,5 @@
-import { estimateText, estimateTotal } from './estimate';
+import { useState } from 'react';
+import { estimateTotal } from './estimate';
 import type { EstimateItem } from './estimate';
 import './estimate.css';
 
@@ -13,16 +14,21 @@ const dateLabel = (value: string) => value.split('-').reverse().join('.');
 
 export function EstimatePanel({ items, onRemove, onReplace, onClear }: Props) {
  const event = items[0]?.request;
- function download() {
-  const url = URL.createObjectURL(new Blob([estimateText(items)], { type: 'text/plain;charset=utf-8' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `firebird-estimate-${event?.date ?? 'draft'}.txt`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+ const [downloading, setDownloading] = useState(false);
+ const [downloadError, setDownloadError] = useState('');
+ async function download() {
+  if (downloading || !items.length) return;
+  setDownloading(true); setDownloadError('');
+  try {
+   const { downloadEstimatePdf } = await import('./estimatePdf');
+   await downloadEstimatePdf(items);
+  } catch {
+   setDownloadError('Не удалось создать PDF. Смета сохранена в этом окне. Проверьте соединение и попробуйте скачать ещё раз.');
+  } finally { setDownloading(false); }
  }
  return <section className="estimate-panel" aria-labelledby="estimate-title">
-  <div className="estimate-heading"><div><p className="eyebrow">ВАШИ ВЫБРАННЫЕ ПОДРЯДЧИКИ</p><h2 id="estimate-title">Предварительная смета</h2></div>{items.length > 0 && <div className="estimate-actions"><button type="button" onClick={download}>Скачать смету</button><button type="button" onClick={onClear}>Очистить смету</button></div>}</div>
+  <div className="estimate-heading"><div><p className="eyebrow">ВАШИ ВЫБРАННЫЕ ПОДРЯДЧИКИ</p><h2 id="estimate-title">Предварительная смета</h2></div>{items.length > 0 && <div className="estimate-actions"><button className="estimate-download" type="button" disabled={downloading} onClick={download}>{downloading ? 'Готовим PDF…' : 'Скачать PDF'}</button><button type="button" onClick={onClear}>Очистить смету</button></div>}</div>
+  {downloadError && <p className="error" role="alert">{downloadError}</p>}
   {!event ? <p className="estimate-empty">Добавьте подрядчика из подбора, затем выберите следующую категорию. Здесь соберётся стоимость выбранных услуг для одного мероприятия.</p> : <>
    <p className="estimate-context">{event.city} <span aria-hidden="true">·</span> {dateLabel(event.date)} <span aria-hidden="true">·</span> {event.event_format}</p>
    <ul className="estimate-items">{items.map(item => <li key={item.contractor.id}>

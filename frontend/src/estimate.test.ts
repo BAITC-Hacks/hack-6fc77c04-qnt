@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { EstimatePanel } from './EstimatePanel';
-import { addEstimateItem, estimateText, estimateTotal, ESTIMATE_STORAGE_KEY, readEstimate, removeEstimateItem, replaceEstimateItem, saveEstimate } from './estimate';
+import { addEstimateItem, estimateTotal, ESTIMATE_STORAGE_KEY, readEstimate, removeEstimateItem, replaceEstimateItem, saveEstimate } from './estimate';
 import type { Card, Request } from './types';
 
 const request: Request = { city: 'Алматы', date: '2026-10-10', event_format: 'корпоратив', category: 'Ведущий', budget_kzt: 1000000, language: 'русский', duration_hours: 4 };
@@ -83,22 +83,11 @@ describe('A draft of selected contractors for one event', () => {
   expect(readEstimate(storage)).toEqual([]);
   expect(saveEstimate(addEstimateItem([], card, request).items, storage)).toBe(false);
  });
- it('exports the original event, prices, conditions and caveats without adding fees or multiplying hours', () => {
-  const items = addEstimateItem([], card, request).items;
-  const text = estimateText(items).replaceAll('\u00a0', ' ');
-  expect(text).toContain('Алматы · 10.10.2026 · корпоратив');
-  expect(text).toContain('Первый — Ведущий');
-  expect(text).toContain('От 500 000 ₸ за мероприятие');
-  expect(text).toContain('Сумма начальных цен: от 500 000 ₸');
-  expect(text).toContain('Язык: русский');
-  expect(text).toContain('Длительность: 4 ч');
-  expect(text).toContain('не бронирование');
-  expect(text).toContain('не обновляет занятость автоматически');
- });
  it('shows initial prices, event context, provenance and no booking claim', () => {
   const items = addEstimateItem([], { ...card, name: '<script>bad</script>', flags: { ...card.flags, synthetic: true, price_imputed: true } }, request).items;
   const html = renderToStaticMarkup(createElement(EstimatePanel, { items, onRemove: () => {}, onReplace: () => {}, onClear: () => {} }));
   expect(html).toContain('10.10.2026');
+  expect(html).toContain('Скачать PDF');
   expect(html).toContain('Сумма начальных цен');
   expect(html).toContain('Синтетический профиль');
   expect(html).toContain('Цена добавлена при подготовке данных');

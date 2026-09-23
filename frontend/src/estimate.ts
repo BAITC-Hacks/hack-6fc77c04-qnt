@@ -44,19 +44,6 @@ export function estimateTotal(items: EstimateItem[]): number {
  return items.reduce((total, item) => total + item.contractor.price_from_kzt, 0);
 }
 
-export function estimateText(items: EstimateItem[]): string {
- const event = items[0]?.request;
- if (!event) return 'Firebird — предварительная смета\nПодрядчики пока не выбраны.';
- const money = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)} ₸`;
- const rows = items.map((item, index) => {
-  const c = item.contractor, r = item.request;
-  const conditions = [r.language && `Язык: ${r.language}`, r.duration_hours !== null && `Длительность: ${r.duration_hours} ч`].filter(Boolean);
-  const flags = [c.flags.synthetic && 'Синтетический профиль', c.flags.price_imputed && 'Цена добавлена при подготовке данных', c.flags.city_imputed && 'Город добавлен при подготовке данных'].filter(Boolean);
-  return [`${index + 1}. ${c.name} — ${c.category}`, `От ${money(c.price_from_kzt)} за мероприятие`, ...conditions, ...flags].join('\n');
- });
- return ['Firebird — предварительная смета', `${event.city} · ${event.date.split('-').reverse().join('.')} · ${event.event_format}`, '', ...rows.flatMap(row => [row, '']), `Сумма начальных цен: от ${money(estimateTotal(items))}`, `Выбрано подрядчиков: ${items.length}`, '', 'Это черновик выбранных услуг, не полная стоимость мероприятия и не бронирование.', 'Цены взяты из учебного каталога организатора. Итоговую цену, состав услуг и доступность нужно подтвердить у подрядчиков.', 'Сохранённая смета не обновляет занятость автоматически. Перед решением повторите подбор на нужную дату.'].join('\n');
-}
-
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const text = (value: unknown, max = 80): value is string => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
 const amount = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
